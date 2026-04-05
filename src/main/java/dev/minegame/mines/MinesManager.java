@@ -85,7 +85,7 @@ public final class MinesManager {
         plugin.getConfig().options().copyDefaults(true);
         plugin.saveConfig();
         reloadFromCurrentConfigOnly();
-        msg(requester, "messages.reloaded");
+        msg(requester, "messages.minegame.admin.reloaded");
     }
 
     public void reloadFromCurrentConfigOnly() {
@@ -96,27 +96,27 @@ public final class MinesManager {
     }
 
     private void loadConfigValues() {
-        this.gridSize = plugin.getConfig().getInt("board.grid-size", 5);
-        this.wallDistance = plugin.getConfig().getInt("board.wall-distance", 4);
-        this.frameVerticalOffset = plugin.getConfig().getBoolean("board.frame-one-higher", true) ? 1 : 0;
-        this.durationSeconds = plugin.getConfig().getInt("game.duration-seconds", 300);
-        this.houseEdgePercent = plugin.getConfig().getDouble("game.house-edge-percent", 4.0D);
-        this.maxMultiplier = plugin.getConfig().getDouble("game.max-multiplier", 25.0D);
-        this.maxPayout = plugin.getConfig().getDouble("game.max-payout", -1.0D);
-        this.resetDelayTicks = plugin.getConfig().getInt("board.reset-delay-seconds", 3) * 20;
-        this.hiddenBlock = parseMaterial(plugin.getConfig().getString("board.hidden-block"), Material.STONE);
-        this.safeRevealBlock = parseMaterial(plugin.getConfig().getString("board.safe-reveal-block"), Material.DIAMOND_BLOCK);
-        this.mineRevealBlock = parseMaterial(plugin.getConfig().getString("board.mine-reveal-block"), Material.TNT);
-        this.frameBlock = parseMaterial(plugin.getConfig().getString("board.frame-block"), Material.QUARTZ_BLOCK);
-        this.stationBlock = parseMaterial(plugin.getConfig().getString("board.station-block"), Material.BEACON);
-        this.fireworksOnWin = plugin.getConfig().getBoolean("effects.fireworks-on-win", true);
-        this.fireworkCount = Math.max(1, plugin.getConfig().getInt("effects.firework-count", 3));
-        this.winDingCount = Math.max(1, plugin.getConfig().getInt("effects.win-ding-count", 5));
-        this.titlePrefix = plugin.getConfig().getString("game.title-prefix", "&6[MineGame] &f");
-        this.broadcastStart = plugin.getConfig().getBoolean("announcements.broadcast-start", false);
-        this.broadcastCashout = plugin.getConfig().getBoolean("announcements.broadcast-cashout", false);
-        this.broadcastWin = plugin.getConfig().getBoolean("announcements.broadcast-win", false);
-        this.sendWelcomeOnStart = plugin.getConfig().getBoolean("announcements.send-welcome-on-start", true);
+        this.gridSize = plugin.getConfig().getInt("minegame.board.grid-size", 5);
+        this.wallDistance = plugin.getConfig().getInt("minegame.board.wall-distance", 4);
+        this.frameVerticalOffset = plugin.getConfig().getBoolean("minegame.board.frame-one-higher", true) ? 1 : 0;
+        this.durationSeconds = plugin.getConfig().getInt("minegame.game.duration-seconds", 300);
+        this.houseEdgePercent = plugin.getConfig().getDouble("minegame.game.house-edge-percent", 4.0D);
+        this.maxMultiplier = plugin.getConfig().getDouble("minegame.game.max-multiplier", 25.0D);
+        this.maxPayout = plugin.getConfig().getDouble("minegame.game.max-payout", -1.0D);
+        this.resetDelayTicks = plugin.getConfig().getInt("minegame.board.reset-delay-seconds", 3) * 20;
+        this.hiddenBlock = parseMaterial(plugin.getConfig().getString("minegame.board.hidden-block"), Material.STONE);
+        this.safeRevealBlock = parseMaterial(plugin.getConfig().getString("minegame.board.safe-reveal-block"), Material.DIAMOND_BLOCK);
+        this.mineRevealBlock = parseMaterial(plugin.getConfig().getString("minegame.board.mine-reveal-block"), Material.TNT);
+        this.frameBlock = parseMaterial(plugin.getConfig().getString("minegame.board.frame-block"), Material.QUARTZ_BLOCK);
+        this.stationBlock = parseMaterial(plugin.getConfig().getString("minegame.board.station-block"), Material.BEACON);
+        this.fireworksOnWin = plugin.getConfig().getBoolean("minegame.effects.fireworks-on-win", true);
+        this.fireworkCount = Math.max(1, plugin.getConfig().getInt("minegame.effects.firework-count", 3));
+        this.winDingCount = Math.max(1, plugin.getConfig().getInt("minegame.effects.win-ding-count", 5));
+        this.titlePrefix = plugin.getConfig().getString("minegame.game.title-prefix", "&6[MineGame] &f");
+        this.broadcastStart = plugin.getConfig().getBoolean("minegame.announcements.broadcast-start", false);
+        this.broadcastCashout = plugin.getConfig().getBoolean("minegame.announcements.broadcast-cashout", false);
+        this.broadcastWin = plugin.getConfig().getBoolean("minegame.announcements.broadcast-win", false);
+        this.sendWelcomeOnStart = plugin.getConfig().getBoolean("minegame.announcements.send-welcome-on-start", true);
     }
 
     public void shutdown() {
@@ -134,7 +134,7 @@ public final class MinesManager {
     public void createStation(Player player) {
         Block beacon = player.getLocation().subtract(0, 1, 0).getBlock();
         if (beacon.getType() != stationBlock) {
-            msg(player, "messages.not-on-beacon");
+            msg(player, "messages.minegame.gameplay.not-on-beacon");
             return;
         }
 
@@ -151,13 +151,13 @@ public final class MinesManager {
         stationStorage.upsert(station);
         stationStorage.save();
         regenerateBoard(station);
-        msg(player, "messages.created");
+        msg(player, "messages.minegame.admin.created");
     }
 
     public void removeStation(Player player) {
         StationData station = stationFromPlayerBeacon(player);
         if (station == null) {
-            msg(player, "messages.not-on-beacon");
+            msg(player, "messages.minegame.gameplay.not-on-beacon");
             return;
         }
         BukkitTask pendingReset = resetTasksByStation.remove(station.key());
@@ -176,63 +176,71 @@ public final class MinesManager {
         }
         stationStorage.remove(station.key());
         stationStorage.save();
-        msg(player, "messages.removed");
+        msg(player, "messages.minegame.admin.removed");
     }
 
     public void regenerateStation(Player player) {
         StationData station = stationFromPlayerBeacon(player);
         if (station == null) {
-            msg(player, "messages.not-on-beacon");
+            msg(player, "messages.minegame.gameplay.not-on-beacon");
             return;
         }
         regenerateBoard(station);
-        msg(player, "messages.regenerated");
+        msg(player, "messages.minegame.admin.regenerated");
     }
 
     public void listStations(Player player) {
-        player.sendMessage(color("&6[MineGame] &fStations: &e" + stationStorage.all().size()));
+        player.sendMessage(color(replaceVars("messages.minegame.admin.station-list-header", Map.of(
+                "%count%", String.valueOf(stationStorage.all().size())
+        ))));
         for (StationData station : stationStorage.all()) {
-            player.sendMessage(color("&7- &f" + station.worldName() + " &7(" + station.x() + ", " + station.y() + ", " + station.z() + ") &8facing " + station.facing().name()));
+            player.sendMessage(color(replaceVars("messages.minegame.admin.station-list-entry", Map.of(
+                    "%world%", station.worldName(),
+                    "%x%", String.valueOf(station.x()),
+                    "%y%", String.valueOf(station.y()),
+                    "%z%", String.valueOf(station.z()),
+                    "%facing%", station.facing().name()
+            ))));
         }
     }
 
     public void startGame(Player player, int mines, double wager) {
         if (mines < 1 || mines > (gridSize * gridSize - 1)) {
-            player.sendMessage(color(replaceVars("messages.invalid-mines", Map.of(
+            player.sendMessage(color(replaceVars("messages.minegame.gameplay.invalid-mines", Map.of(
                     "%max%", String.valueOf(gridSize * gridSize - 1)
             ))));
             return;
         }
         if (wager <= 0D) {
-            msg(player, "messages.invalid-wager");
+            msg(player, "messages.minegame.gameplay.invalid-wager");
             return;
         }
         if (activeByPlayer.containsKey(player.getUniqueId())) {
-            msg(player, "messages.already-playing");
+            msg(player, "messages.minegame.gameplay.already-playing");
             return;
         }
 
         StationData station = stationFromPlayerBeacon(player);
         if (station == null) {
-            msg(player, "messages.not-on-beacon");
+            msg(player, "messages.minegame.gameplay.not-on-beacon");
             return;
         }
         if (activeByStation.containsKey(station.key())) {
-            msg(player, "messages.station-busy");
+            msg(player, "messages.minegame.gameplay.station-busy");
             return;
         }
         if (resetTasksByStation.containsKey(station.key())) {
-            msg(player, "messages.station-busy");
+            msg(player, "messages.minegame.gameplay.station-busy");
             return;
         }
 
         if (economy.getBalance(player) < wager) {
-            msg(player, "messages.no-money");
+            msg(player, "messages.minegame.gameplay.no-money");
             return;
         }
         EconomyResponse withdraw = economy.withdrawPlayer(player, wager);
         if (!withdraw.transactionSuccess()) {
-            msg(player, "messages.no-money");
+            msg(player, "messages.minegame.gameplay.no-money");
             return;
         }
 
@@ -247,20 +255,20 @@ public final class MinesManager {
 
         renderActiveBoard(game);
 
-        player.sendMessage(color(replaceVars("messages.started", Map.of(
+        player.sendMessage(color(replaceVars("messages.minegame.gameplay.started", Map.of(
                 "%mines%", String.valueOf(mines),
                 "%wager%", MONEY_FORMAT.format(wager)
         ))));
         if (sendWelcomeOnStart) {
             Material stationSafeBlock = safeRevealBlockFor(station);
             Material stationMineBlock = mineRevealBlockFor(station);
-            player.sendMessage(color(prefixed(replaceVars("messages.welcome", Map.of(
+            player.sendMessage(color(prefixed(replaceVars("messages.minegame.gameplay.welcome", Map.of(
                     "%safe_block%", prettyMaterial(stationSafeBlock),
                     "%mine_block%", prettyMaterial(stationMineBlock)
             )))));
         }
         if (broadcastStart) {
-            Bukkit.broadcastMessage(color(prefixed(replaceVars("messages.started-broadcast", Map.of(
+            Bukkit.broadcastMessage(color(prefixed(replaceVars("messages.minegame.gameplay.started-broadcast", Map.of(
                     "%player%", player.getName(),
                     "%wager%", MONEY_FORMAT.format(wager),
                     "%mines%", String.valueOf(mines)
@@ -307,18 +315,18 @@ public final class MinesManager {
     public void cashout(Player player) {
         ActiveGame game = activeByPlayer.get(player.getUniqueId());
         if (game == null) {
-            msg(player, "messages.not-playing");
+            msg(player, "messages.minegame.gameplay.not-playing");
             return;
         }
         if (game.revealedSafeCount() < 1) {
-            msg(player, "messages.cashout-none");
+            msg(player, "messages.minegame.gameplay.cashout-none");
             return;
         }
         double multiplier = currentMultiplierFor(game);
         double payout = clampPayout(game.wager() * multiplier);
         EconomyResponse deposit = economy.depositPlayer(player, payout);
         if (!deposit.transactionSuccess()) {
-            player.sendMessage(color("&cEconomy error: payout failed. Contact staff."));
+            msg(player, "messages.minegame.gameplay.economy-payout-failed");
             return;
         }
         houseBalanceStorage.recordMinesResult(game.wager(), payout);
@@ -334,9 +342,9 @@ public final class MinesManager {
                 "%xmult%", MONEY_FORMAT.format(multiplier),
                 "%profit%", MONEY_FORMAT.format(profit)
         );
-        player.sendMessage(color(resolveMessage("messages.cashout", "messages.cashout-broadcast", vars)));
+        player.sendMessage(color(resolveMessage("messages.minegame.gameplay.cashout", "messages.minegame.gameplay.cashout-broadcast", vars)));
         if (broadcastCashout) {
-            Bukkit.broadcastMessage(color(prefixed(resolveMessage("messages.cashout-broadcast", "messages.cashout", vars))));
+            Bukkit.broadcastMessage(color(prefixed(resolveMessage("messages.minegame.gameplay.cashout-broadcast", "messages.minegame.gameplay.cashout", vars))));
         }
         cancelAndCleanup(game);
         scheduleStationReset(game.station());
@@ -365,42 +373,42 @@ public final class MinesManager {
                 updated.add(station.clearBoardMaterialOverrides());
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&aBoard material overrides reset for all stations."));
+            msg(player, "messages.minegame.admin.board-material-reset-all");
             return;
         }
         StationData station = stationFromPlayerBeacon(player);
         if (station == null) {
-            msg(player, "messages.not-on-beacon");
+            msg(player, "messages.minegame.gameplay.not-on-beacon");
             return;
         }
         saveStation(station.clearBoardMaterialOverrides(), true);
-        player.sendMessage(color("&aBoard material overrides reset for this station."));
+        msg(player, "messages.minegame.admin.board-material-reset-station");
     }
 
     public void setHologramsEnabled(Player player, boolean enabled) {
-        plugin.getConfig().set("hologram.enabled", enabled);
+        plugin.getConfig().set("minegame.hologram.enabled", enabled);
         plugin.saveConfig();
-        msg(player, enabled ? "messages.hologram-enabled" : "messages.hologram-disabled");
+        msg(player, enabled ? "messages.minegame.admin.hologram-enabled" : "messages.minegame.admin.hologram-disabled");
     }
 
     public void setDebugMode(Player player, boolean enabled) {
         if (enabled) {
             debugPlayers.add(player.getUniqueId());
-            msg(player, "messages.debug-on");
+            msg(player, "messages.minegame.admin.debug-on");
         } else {
             debugPlayers.remove(player.getUniqueId());
-            msg(player, "messages.debug-off");
+            msg(player, "messages.minegame.admin.debug-off");
         }
     }
 
     public void setConfigValue(Player player, String pathInput, String valueInput) {
-        String path = pathInput.toLowerCase();
+        String path = normalizeConfigPath(pathInput);
         Object parsed = parseConfigValue(path, valueInput);
         if (parsed == null) {
             if (isAllowedConfigPath(path)) {
-                player.sendMessage(color(replaceVars("messages.config-invalid-value", Map.of("%path%", path))));
+                player.sendMessage(color(replaceVars("messages.minegame.admin.config-invalid-value", Map.of("%path%", path))));
             } else {
-                msg(player, "messages.config-invalid-path");
+                msg(player, "messages.minegame.admin.config-invalid-path");
             }
             return;
         }
@@ -409,13 +417,13 @@ public final class MinesManager {
         plugin.saveConfig();
         loadConfigValues();
 
-        if (path.startsWith("board.")) {
+        if (path.startsWith("minegame.board.")) {
             for (StationData station : stationStorage.all()) {
                 regenerateBoard(station);
             }
         }
 
-        player.sendMessage(color(replaceVars("messages.config-set", Map.of(
+        player.sendMessage(color(replaceVars("messages.minegame.admin.config-set", Map.of(
                 "%path%", path,
                 "%value%", String.valueOf(parsed)
         ))));
@@ -426,7 +434,7 @@ public final class MinesManager {
     }
 
     public Object getCurrentConfigValue(String path) {
-        return plugin.getConfig().get(path);
+        return plugin.getConfig().get(normalizeConfigPath(path));
     }
 
     public StationData stationFromPlayerBeacon(Player player) {
@@ -494,7 +502,7 @@ public final class MinesManager {
         if (game.isMine(index)) {
             setBlockRevealed(block, stationMineRevealBlock);
             playMineEffect(block.getLocation());
-            loseGame(game, player, "messages.hit-mine");
+            loseGame(game, player, "messages.minegame.gameplay.hit-mine");
             return;
         }
 
@@ -520,7 +528,9 @@ public final class MinesManager {
     ) {
         Material parsed = Material.matchMaterial(materialName);
         if (parsed == null || !parsed.isBlock()) {
-            player.sendMessage(color("&cInvalid block material: &f" + materialName));
+            player.sendMessage(color(replaceVars("messages.minegame.admin.invalid-block-material", Map.of(
+                    "%material%", materialName
+            ))));
             return;
         }
 
@@ -530,18 +540,24 @@ public final class MinesManager {
                 updated.add(updateBoardMaterial(station, kind, parsed.name()));
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&a" + label + " set to &f" + parsed.name() + "&a for all stations."));
+            player.sendMessage(color(replaceVars("messages.minegame.admin.board-material-set-all", Map.of(
+                    "%label%", label,
+                    "%material%", parsed.name()
+            ))));
             return;
         }
 
         StationData station = stationFromPlayerBeacon(player);
         if (station == null) {
-            msg(player, "messages.not-on-beacon");
+            msg(player, "messages.minegame.gameplay.not-on-beacon");
             return;
         }
         StationData updated = updateBoardMaterial(station, kind, parsed.name());
         saveStation(updated, true);
-        player.sendMessage(color("&a" + label + " set to &f" + parsed.name() + "&a for this station."));
+        player.sendMessage(color(replaceVars("messages.minegame.admin.board-material-set-station", Map.of(
+                "%label%", label,
+                "%material%", parsed.name()
+        ))));
     }
 
     private StationData updateBoardMaterial(StationData station, String kind, String value) {
@@ -609,16 +625,19 @@ public final class MinesManager {
         renderActiveBoard(game);
         sendProgressActionbar(player, game);
         if (game.secondsLeft() <= 0) {
-            loseGame(game, player, "messages.timeout");
+            loseGame(game, player, "messages.minegame.gameplay.timeout");
         }
     }
 
     private void sendProgressActionbar(Player player, ActiveGame game) {
         int safeTarget = game.safeTargetCount(gridSize);
         double multiplier = currentMultiplierFor(game);
-        player.sendActionBar(color("&7Time: &f" + game.secondsLeft() + "s &7| &a"
-                + game.revealedSafeCount() + "/" + safeTarget + " safe &7| &e"
-                + MONEY_FORMAT.format(multiplier) + "x"));
+        player.sendActionBar(color(replaceVars("messages.minegame.gameplay.progress-actionbar", Map.of(
+                "%seconds_left%", String.valueOf(game.secondsLeft()),
+                "%revealed%", String.valueOf(game.revealedSafeCount()),
+                "%target%", String.valueOf(safeTarget),
+                "%xmult%", MONEY_FORMAT.format(multiplier)
+        ))));
     }
 
     private void sendProgressChat(Player player, ActiveGame game) {
@@ -635,7 +654,7 @@ public final class MinesManager {
                 "%potential%", MONEY_FORMAT.format(potential),
                 "%next_potential%", MONEY_FORMAT.format(nextPotential)
         );
-        player.sendMessage(color(replaceVars("messages.progress", vars)));
+        player.sendMessage(color(replaceVars("messages.minegame.gameplay.progress", vars)));
     }
 
     private void loseGame(ActiveGame game, Player player, String messageKey) {
@@ -670,16 +689,16 @@ public final class MinesManager {
         double settledPayout = payout;
         if (!deposit.transactionSuccess()) {
             settledPayout = 0.0;
-            player.sendMessage(color("&cEconomy error: payout failed. Contact staff."));
+            msg(player, "messages.minegame.gameplay.economy-payout-failed");
         }
         houseBalanceStorage.recordMinesResult(game.wager(), settledPayout);
-        player.sendMessage(color(replaceVars("messages.won", Map.of(
+        player.sendMessage(color(replaceVars("messages.minegame.gameplay.won", Map.of(
                 "%payout%", MONEY_FORMAT.format(payout),
                 "%xmult%", MONEY_FORMAT.format(currentMultiplierFor(game))
         ))));
         if (broadcastWin) {
             double profit = Math.max(0.0, payout - game.wager());
-            Bukkit.broadcastMessage(color(prefixed(resolveMessage("messages.won-broadcast", "messages.won", Map.of(
+            Bukkit.broadcastMessage(color(prefixed(resolveMessage("messages.minegame.gameplay.won-broadcast", "messages.minegame.gameplay.won", Map.of(
                     "%player%", player.getName(),
                     "%payout%", MONEY_FORMAT.format(payout),
                     "%xmult%", MONEY_FORMAT.format(currentMultiplierFor(game)),
@@ -892,33 +911,33 @@ public final class MinesManager {
 
     private boolean isAllowedConfigPath(String path) {
         return switch (path) {
-            case "board.grid-size",
-                 "board.wall-distance",
-                 "board.frame-one-higher",
-                 "board.station-block",
-                 "board.hidden-block",
-                 "board.safe-reveal-block",
-                 "board.mine-reveal-block",
-                 "board.frame-block",
-                 "board.reset-delay-seconds",
-                 "game.duration-seconds",
-                 "game.house-edge-percent",
-                 "game.max-multiplier",
-                 "game.max-payout",
-                 "game.title-prefix",
-                 "effects.fireworks-on-win",
-                 "effects.firework-count",
-                 "effects.win-ding-count",
-                 "announcements.broadcast-start",
-                 "announcements.broadcast-cashout",
-                 "announcements.broadcast-win",
-                 "announcements.send-welcome-on-start",
-                 "casino-frame-activation-distance",
-                 "hologram.enabled",
-                 "hologram.line-spacing",
-                 "hologram.view-range",
-                 "hologram.behind-beacon-distance",
-                 "hologram.base-height" -> true;
+            case "minegame.board.grid-size",
+                 "minegame.board.wall-distance",
+                 "minegame.board.frame-one-higher",
+                 "minegame.board.station-block",
+                 "minegame.board.hidden-block",
+                 "minegame.board.safe-reveal-block",
+                 "minegame.board.mine-reveal-block",
+                 "minegame.board.frame-block",
+                 "minegame.board.reset-delay-seconds",
+                 "minegame.game.duration-seconds",
+                 "minegame.game.house-edge-percent",
+                 "minegame.game.max-multiplier",
+                 "minegame.game.max-payout",
+                 "minegame.game.title-prefix",
+                 "minegame.effects.fireworks-on-win",
+                 "minegame.effects.firework-count",
+                 "minegame.effects.win-ding-count",
+                 "minegame.announcements.broadcast-start",
+                 "minegame.announcements.broadcast-cashout",
+                 "minegame.announcements.broadcast-win",
+                 "minegame.announcements.send-welcome-on-start",
+                 "minegame.casino-frame-activation-distance",
+                 "minegame.hologram.enabled",
+                 "minegame.hologram.line-spacing",
+                 "minegame.hologram.view-range",
+                 "minegame.hologram.behind-beacon-distance",
+                 "minegame.hologram.base-height" -> true;
             default -> false;
         };
     }
@@ -929,60 +948,60 @@ public final class MinesManager {
         }
         try {
             return switch (path) {
-                case "board.grid-size" -> {
+                case "minegame.board.grid-size" -> {
                     int value = Integer.parseInt(raw);
                     yield value >= 2 ? value : null;
                 }
-                case "board.wall-distance" -> {
+                case "minegame.board.wall-distance" -> {
                     int value = Integer.parseInt(raw);
                     yield value >= 1 ? value : null;
                 }
-                case "board.reset-delay-seconds" -> {
+                case "minegame.board.reset-delay-seconds" -> {
                     int value = Integer.parseInt(raw);
                     yield value >= 1 ? value : null;
                 }
-                case "game.duration-seconds" -> {
+                case "minegame.game.duration-seconds" -> {
                     int value = Integer.parseInt(raw);
                     yield value >= 1 ? value : null;
                 }
-                case "effects.firework-count", "effects.win-ding-count" -> {
+                case "minegame.effects.firework-count", "minegame.effects.win-ding-count" -> {
                     int value = Integer.parseInt(raw);
                     yield value >= 1 ? value : null;
                 }
-                case "game.house-edge-percent" -> {
+                case "minegame.game.house-edge-percent" -> {
                     double value = Double.parseDouble(raw);
                     yield value >= 0.0 ? value : null;
                 }
-                case "game.max-multiplier" -> {
+                case "minegame.game.max-multiplier" -> {
                     double value = Double.parseDouble(raw);
                     yield value >= 0.0 ? value : null;
                 }
-                case "game.max-payout" -> {
+                case "minegame.game.max-payout" -> {
                     double value = Double.parseDouble(raw);
                     yield (value == -1.0 || value > 0.0) ? value : null;
                 }
-                case "hologram.line-spacing" -> {
+                case "minegame.hologram.line-spacing" -> {
                     double value = Double.parseDouble(raw);
                     yield value > 0.0 ? value : null;
                 }
-                case "hologram.view-range" -> {
+                case "minegame.hologram.view-range" -> {
                     double value = Double.parseDouble(raw);
                     yield value > 0.0 ? value : null;
                 }
-                case "casino-frame-activation-distance" -> {
+                case "minegame.casino-frame-activation-distance" -> {
                     double value = Double.parseDouble(raw);
                     yield value >= 0.0 ? value : null;
                 }
-                case "hologram.behind-beacon-distance", "hologram.base-height" -> Double.parseDouble(raw);
-                case "effects.fireworks-on-win",
-                        "hologram.enabled",
-                        "board.frame-one-higher",
-                        "announcements.broadcast-start",
-                        "announcements.broadcast-cashout",
-                        "announcements.broadcast-win",
-                        "announcements.send-welcome-on-start" -> parseBoolean(raw);
-                case "game.title-prefix" -> raw;
-                case "board.hidden-block", "board.safe-reveal-block", "board.mine-reveal-block", "board.frame-block", "board.station-block" -> {
+                case "minegame.hologram.behind-beacon-distance", "minegame.hologram.base-height" -> Double.parseDouble(raw);
+                case "minegame.effects.fireworks-on-win",
+                        "minegame.hologram.enabled",
+                        "minegame.board.frame-one-higher",
+                        "minegame.announcements.broadcast-start",
+                        "minegame.announcements.broadcast-cashout",
+                        "minegame.announcements.broadcast-win",
+                        "minegame.announcements.send-welcome-on-start" -> parseBoolean(raw);
+                case "minegame.game.title-prefix" -> raw;
+                case "minegame.board.hidden-block", "minegame.board.safe-reveal-block", "minegame.board.mine-reveal-block", "minegame.board.frame-block", "minegame.board.station-block" -> {
                     Material material = Material.matchMaterial(raw);
                     yield (material != null && material.isBlock()) ? material.name() : null;
                 }
@@ -1000,6 +1019,11 @@ public final class MinesManager {
             case "false", "off", "no", "0" -> false;
             default -> null;
         };
+    }
+
+    private String normalizeConfigPath(String rawPath) {
+        String path = rawPath.toLowerCase();
+        return path.startsWith("minegame.") ? path : "minegame." + path;
     }
 
     private Material parseMaterial(String raw, Material fallback) {
@@ -1027,12 +1051,12 @@ public final class MinesManager {
     }
 
     private Material visualFrameBlockFor(StationData station) {
-        boolean animEnabledDefault = plugin.getConfig().getBoolean("frame-animation.enabled", false);
+        boolean animEnabledDefault = plugin.getConfig().getBoolean("minegame.frame-animation.enabled", false);
         boolean animEnabled = station.frameAnimEnabled() != null ? station.frameAnimEnabled() : animEnabledDefault;
         if (!animEnabled) {
             return frameBlockFor(station);
         }
-        Material defaultAnimBlock = parseMaterial(plugin.getConfig().getString("frame-animation.block"), Material.REDSTONE_LAMP);
+        Material defaultAnimBlock = parseMaterial(plugin.getConfig().getString("minegame.frame-animation.block"), Material.REDSTONE_LAMP);
         return parseMaterial(station.frameAnimBlock(), defaultAnimBlock);
     }
 
@@ -1047,7 +1071,7 @@ public final class MinesManager {
             value = plugin.getConfig().getDefaults().getString(path);
         }
         if (value == null) {
-            value = "&cMissing message: " + path;
+            value = text("messages.shared.missing-message", "&cMissing message: %path%").replace("%path%", path);
         }
         player.sendMessage(color(value));
     }
@@ -1055,7 +1079,7 @@ public final class MinesManager {
     private String replaceVars(String path, Map<String, String> vars) {
         String value = messageTemplate(path);
         if (value == null) {
-            value = "&cMissing message: " + path;
+            value = text("messages.shared.missing-message", "&cMissing message: %path%").replace("%path%", path);
         }
         for (Map.Entry<String, String> entry : vars.entrySet()) {
             value = value.replace(entry.getKey(), entry.getValue());
@@ -1069,7 +1093,7 @@ public final class MinesManager {
             value = messageTemplate(fallbackPath);
         }
         if (value == null) {
-            value = "&cMissing message: " + primaryPath;
+            value = text("messages.shared.missing-message", "&cMissing message: %path%").replace("%path%", primaryPath);
         }
         for (Map.Entry<String, String> entry : vars.entrySet()) {
             value = value.replace(entry.getKey(), entry.getValue());
@@ -1089,25 +1113,43 @@ public final class MinesManager {
         return titlePrefix + message;
     }
 
+    public String text(String path, String fallback) {
+        String value = messageTemplate(path);
+        return value == null ? fallback : value;
+    }
+
+    public String colorize(String input) {
+        return color(input);
+    }
+
+    public List<String> lines(String path, List<String> fallback) {
+        List<String> lines = plugin.getConfig().getStringList(path);
+        return lines.isEmpty() ? List.copyOf(fallback) : List.copyOf(lines);
+    }
+
     public void showHouseBalance(Player player) {
         double balance = houseBalanceStorage.minesBalance();
         double wagered = houseBalanceStorage.minesTotalWagered();
         double paid = houseBalanceStorage.minesTotalPayout();
         double edge = wagered <= 0.0 ? 0.0 : ((wagered - paid) / wagered) * 100.0;
-        player.sendMessage(color(prefixed("&eHouse Balance: &a$" + MONEY_FORMAT.format(balance)
-                + " &7| &eEdge: &a" + MONEY_FORMAT.format(edge) + "%")));
-        player.sendMessage(color("&7Wagered: &f$" + MONEY_FORMAT.format(wagered)
-                + " &7| Paid: &f$" + MONEY_FORMAT.format(paid)));
+        player.sendMessage(color(prefixed(replaceVars("messages.minegame.admin.house-balance-header", Map.of(
+                "%balance%", MONEY_FORMAT.format(balance),
+                "%edge%", MONEY_FORMAT.format(edge)
+        )))));
+        player.sendMessage(color(replaceVars("messages.minegame.admin.house-balance-details", Map.of(
+                "%wagered%", MONEY_FORMAT.format(wagered),
+                "%paid%", MONEY_FORMAT.format(paid)
+        ))));
     }
 
     public void withdrawHouseBalance(Player player, String rawAmount) {
         if (!player.hasPermission("mine.admin")) {
-            player.sendMessage(color("&cNo permission."));
+            msg(player, "messages.shared.no-permission");
             return;
         }
         double current = houseBalanceStorage.minesBalance();
         if (current <= 0.0) {
-            player.sendMessage(color(prefixed("&cNo house balance available to withdraw.")));
+            player.sendMessage(color(prefixed(text("messages.minegame.admin.house-no-balance", "&cNo house balance available to withdraw."))));
             return;
         }
         double wanted;
@@ -1117,28 +1159,32 @@ public final class MinesManager {
             try {
                 wanted = Double.parseDouble(rawAmount);
             } catch (NumberFormatException ex) {
-                player.sendMessage(color("&cAmount must be a number or 'all'."));
+                msg(player, "messages.shared.amount-must-be-number-or-all");
                 return;
             }
             if (wanted <= 0.0) {
-                player.sendMessage(color("&cAmount must be greater than 0."));
+                msg(player, "messages.shared.amount-must-be-greater-than-zero");
                 return;
             }
         }
 
         double withdrawn = houseBalanceStorage.withdrawMines(wanted);
         if (withdrawn <= 0.0) {
-            player.sendMessage(color(prefixed("&cNothing to withdraw.")));
+            player.sendMessage(color(prefixed(text("messages.minegame.admin.house-nothing-to-withdraw", "&cNothing to withdraw."))));
             return;
         }
         EconomyResponse deposit = economy.depositPlayer(player, withdrawn);
         if (!deposit.transactionSuccess()) {
             houseBalanceStorage.refundMinesWithdrawal(withdrawn);
-            player.sendMessage(color("&cEconomy error: withdraw failed."));
+            msg(player, "messages.shared.economy-withdraw-failed");
             return;
         }
-        player.sendMessage(color(prefixed("&aWithdrew &6$" + MONEY_FORMAT.format(withdrawn) + " &afrom MineGame house balance.")));
-        player.sendMessage(color("&7Remaining MineGame house balance: &a$" + MONEY_FORMAT.format(houseBalanceStorage.minesBalance())));
+        player.sendMessage(color(prefixed(replaceVars("messages.minegame.admin.house-withdraw-success", Map.of(
+                "%amount%", MONEY_FORMAT.format(withdrawn)
+        )))));
+        player.sendMessage(color(replaceVars("messages.minegame.admin.house-remaining-balance", Map.of(
+                "%balance%", MONEY_FORMAT.format(houseBalanceStorage.minesBalance())
+        ))));
     }
 
     private String prettyMaterial(Material material) {

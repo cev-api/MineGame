@@ -1,5 +1,5 @@
 name: MineGames
-version: 1.0.0
+version: 1.0.1
 author: cev-api
 main: dev.minegame.mines.MinegamePlugin
 api-version: "1.21"

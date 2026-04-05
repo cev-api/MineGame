@@ -15,7 +15,10 @@ public final class MineCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.shared.only-players",
+                    "Only players can use this command."
+            )));
             return true;
         }
 
@@ -25,7 +28,10 @@ public final class MineCommand implements CommandExecutor {
         }
 
         if (args.length < 2) {
-            player.sendMessage("Usage: /minegame <mines 1-24> <wager> or /minegame cashout");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.minegame.command.usage",
+                    "Usage: /minegame <mines 1-24> <wager> or /minegame cashout"
+            )));
             return true;
         }
 
@@ -34,13 +40,19 @@ public final class MineCommand implements CommandExecutor {
         try {
             mines = Integer.parseInt(args[0]);
         } catch (NumberFormatException ex) {
-            player.sendMessage("Mines must be a number.");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.minegame.command.mines-not-number",
+                    "Mines must be a number."
+            )));
             return true;
         }
         try {
             wager = Double.parseDouble(args[1]);
         } catch (NumberFormatException ex) {
-            player.sendMessage("Wager must be a number.");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.minegame.command.wager-not-number",
+                    "Wager must be a number."
+            )));
             return true;
         }
 

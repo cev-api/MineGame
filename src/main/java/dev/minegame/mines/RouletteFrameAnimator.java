@@ -39,11 +39,11 @@ public final class RouletteFrameAnimator {
     }
 
     public void reloadFromCurrentConfig() {
-        this.enabled = plugin.getConfig().getBoolean("roulette-frame-animation.enabled", false);
-        this.blockType = parseBlock(plugin.getConfig().getString("roulette-frame-animation.block"), Material.REDSTONE_LAMP);
-        this.pattern = clampPattern(plugin.getConfig().getInt("roulette-frame-animation.pattern", 1));
-        this.mode = normalizeMode(plugin.getConfig().getString("roulette-frame-animation.mode", "always"));
-        this.intervalTicks = Math.max(1, plugin.getConfig().getInt("roulette-frame-animation.interval-ticks", 6));
+        this.enabled = plugin.getConfig().getBoolean("roulette.frame-animation.enabled", false);
+        this.blockType = parseBlock(plugin.getConfig().getString("roulette.frame-animation.block"), Material.REDSTONE_LAMP);
+        this.pattern = clampPattern(plugin.getConfig().getInt("roulette.frame-animation.pattern", 1));
+        this.mode = normalizeMode(plugin.getConfig().getString("roulette.frame-animation.mode", "always"));
+        this.intervalTicks = Math.max(1, plugin.getConfig().getInt("roulette.frame-animation.interval-ticks", 6));
 
         if (task != null) {
             task.cancel();
@@ -55,7 +55,7 @@ public final class RouletteFrameAnimator {
 
     private void animateTick() {
         tick++;
-        double activationDistance = Math.max(0.0, plugin.getConfig().getDouble("casino-frame-activation-distance", 20.0));
+        double activationDistance = Math.max(0.0, plugin.getConfig().getDouble("minegame.casino-frame-activation-distance", 20.0));
         for (RouletteStationData station : rouletteManager.stations()) {
             RouletteBoardGeometry geometry;
             try {

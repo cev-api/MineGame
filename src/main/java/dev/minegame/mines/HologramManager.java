@@ -62,7 +62,7 @@ public final class HologramManager {
     }
 
     private void tick() {
-        if (!plugin.getConfig().getBoolean("hologram.enabled", true)) {
+        if (!plugin.getConfig().getBoolean("minegame.hologram.enabled", true)) {
             clearAll();
             return;
         }
@@ -89,7 +89,7 @@ public final class HologramManager {
         if (anchor == null) {
             return;
         }
-        double viewRange = plugin.getConfig().getDouble("hologram.view-range", 8.0D);
+        double viewRange = plugin.getConfig().getDouble("minegame.hologram.view-range", 8.0D);
         if (!hasNearbyViewer(anchor, viewRange)) {
             deleteHologram(station.key());
             return;
@@ -108,8 +108,8 @@ public final class HologramManager {
         if (ids == null || ids.size() != lines.size()) {
             return false;
         }
-        double spacing = plugin.getConfig().getDouble("hologram.line-spacing", 0.28D);
-        float viewRange = (float) plugin.getConfig().getDouble("hologram.view-range", 8.0D);
+        double spacing = plugin.getConfig().getDouble("minegame.hologram.line-spacing", 0.28D);
+        float viewRange = (float) plugin.getConfig().getDouble("minegame.hologram.view-range", 8.0D);
         for (int i = 0; i < ids.size(); i++) {
             Entity entity = findDisplayEntity(anchor.getWorld(), ids.get(i));
             if (!(entity instanceof TextDisplay display)) {
@@ -129,8 +129,8 @@ public final class HologramManager {
         purgeDisplaysByStationKey(stationKey);
         purgeNearbyAnchorDisplays(anchor);
         deleteHologram(stationKey);
-        double spacing = plugin.getConfig().getDouble("hologram.line-spacing", 0.28D);
-        float viewRange = (float) plugin.getConfig().getDouble("hologram.view-range", 8.0D);
+        double spacing = plugin.getConfig().getDouble("minegame.hologram.line-spacing", 0.28D);
+        float viewRange = (float) plugin.getConfig().getDouble("minegame.hologram.view-range", 8.0D);
         List<UUID> ids = new ArrayList<>();
         String stationTag = stationTag(stationKey);
         for (int i = 0; i < lines.size(); i++) {
@@ -158,10 +158,9 @@ public final class HologramManager {
     private List<String> linesFor(StationData station) {
         ActiveGame game = minesManager.activeGameForStation(station);
         if (game == null) {
-            return List.of(
+            return configuredLines("messages.minegame.hologram.idle-lines",
                     "&6&lMINEGAME",
-                    "&7Use &e/minegame &7to place a bet"
-            );
+                    "&7Use &e/minegame &7to place a bet");
         }
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(game.playerId());
@@ -172,14 +171,42 @@ public final class HologramManager {
         double potential = minesManager.potentialPayoutFor(game);
         double potentialNext = minesManager.potentialNextPayoutFor(game);
 
-        return List.of(
-                "&f" + name + "'s &6&lMINEGAME",
-                "&7Wager: &6$" + MONEY.format(game.wager()),
-                "&7Revealed: &a" + game.revealedSafeCount() + "&7/" + safeTarget + " &7(Mines: &c" + game.mines() + "&7)",
-                "&7Multiplier: &a" + MULT.format(currentMult) + "x &7-> &e" + MULT.format(nextMult) + "x",
-                "&7Potential: &6$" + MONEY.format(potential) + " &7-> &e$" + MONEY.format(potentialNext),
-                "&7Time Left: &f" + game.secondsLeft() + "s &7| &e/minegame cashout"
-        );
+        return replaceLines(configuredLines("messages.minegame.hologram.active-lines",
+                        "&f%player%'s &6&lMINEGAME",
+                        "&7Wager: &6$%wager%",
+                        "&7Revealed: &a%revealed%&7/%target% &7(Mines: &c%mines%&7)",
+                        "&7Multiplier: &a%current_mult%x &7-> &e%next_mult%x",
+                        "&7Potential: &6$%potential% &7-> &e$%next_potential%",
+                        "&7Time Left: &f%seconds_left%s &7| &e/minegame cashout"),
+                Map.of(
+                        "%player%", name,
+                        "%wager%", MONEY.format(game.wager()),
+                        "%revealed%", String.valueOf(game.revealedSafeCount()),
+                        "%target%", String.valueOf(safeTarget),
+                        "%mines%", String.valueOf(game.mines()),
+                        "%current_mult%", MULT.format(currentMult),
+                        "%next_mult%", MULT.format(nextMult),
+                        "%potential%", MONEY.format(potential),
+                        "%next_potential%", MONEY.format(potentialNext),
+                        "%seconds_left%", String.valueOf(game.secondsLeft())
+                ));
+    }
+
+    private List<String> configuredLines(String path, String... fallback) {
+        List<String> lines = plugin.getConfig().getStringList(path);
+        return lines.isEmpty() ? List.of(fallback) : List.copyOf(lines);
+    }
+
+    private List<String> replaceLines(List<String> templates, Map<String, String> vars) {
+        List<String> lines = new ArrayList<>(templates.size());
+        for (String template : templates) {
+            String line = template;
+            for (Map.Entry<String, String> entry : vars.entrySet()) {
+                line = line.replace(entry.getKey(), entry.getValue());
+            }
+            lines.add(line);
+        }
+        return lines;
     }
 
     private Location anchorLocation(StationData station) {
@@ -188,8 +215,8 @@ public final class HologramManager {
             return null;
         }
         Vector forward = faceToVector(station.facing());
-        double backDistance = plugin.getConfig().getDouble("hologram.behind-beacon-distance", 1.4D);
-        double baseHeight = plugin.getConfig().getDouble("hologram.base-height", 4.2D);
+        double backDistance = plugin.getConfig().getDouble("minegame.hologram.behind-beacon-distance", 1.4D);
+        double baseHeight = plugin.getConfig().getDouble("minegame.hologram.base-height", 4.2D);
         return beacon.clone()
                 .add(0.5, baseHeight, 0.5)
                 .add(forward.multiply(-backDistance));

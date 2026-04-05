@@ -18,15 +18,24 @@ public final class RouletteAdminCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                    "messages.shared.only-players",
+                    "Only players can use this command."
+            )));
             return true;
         }
         if (!player.hasPermission("roulette.admin")) {
-            player.sendMessage(ChatColor.RED + "No permission.");
+            player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                    "messages.shared.no-permission",
+                    "&cNo permission."
+            )));
             return true;
         }
         if (args.length == 0) {
-            player.sendMessage(ChatColor.YELLOW + "Usage: /rouletteadmin <create|remove|regen|list|set|setframe|setred|setblack|setgreen|setselector|casinoframe|housebalance|housewithdraw|reload>");
+            player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                    "messages.roulette.command.admin-usage",
+                    "&eUsage: /rouletteadmin <create|remove|regen|list|set|setframe|setred|setblack|setgreen|setselector|casinoframe|housebalance|housewithdraw|reload>"
+            )));
             return true;
         }
 
@@ -38,10 +47,19 @@ public final class RouletteAdminCommand implements CommandExecutor {
             case "set" -> {
                 if (args.length == 2) {
                     Object current = rouletteManager.getCurrentConfigValue(args[1]);
-                    player.sendMessage(ChatColor.YELLOW + "Current " + args[1] + " = " + String.valueOf(current));
-                    player.sendMessage(ChatColor.YELLOW + "Usage: /rouletteadmin set <path> <value>");
+                    player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                            "messages.roulette.command.current-config",
+                            "&eCurrent %path% = %value%"
+                    ).replace("%path%", args[1]).replace("%value%", String.valueOf(current))));
+                    player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                            "messages.roulette.command.set-usage",
+                            "&eUsage: /rouletteadmin set <path> <value>"
+                    )));
                 } else if (args.length < 3) {
-                    player.sendMessage(ChatColor.YELLOW + "Usage: /rouletteadmin set <path> <value>");
+                    player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                            "messages.roulette.command.set-usage",
+                            "&eUsage: /rouletteadmin set <path> <value>"
+                    )));
                 } else {
                     rouletteManager.setConfigValue(player, args[1], args[2]);
                 }
@@ -56,7 +74,10 @@ public final class RouletteAdminCommand implements CommandExecutor {
             case "housebalance" -> rouletteManager.showHouseBalance(player);
             case "housewithdraw" -> {
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.YELLOW + "Usage: /rouletteadmin housewithdraw <amount|all>");
+                    player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                            "messages.roulette.command.housewithdraw-usage",
+                            "&eUsage: /rouletteadmin housewithdraw <amount|all>"
+                    )));
                 } else {
                     rouletteManager.withdrawHouseBalance(player, args[1]);
                 }
@@ -65,7 +86,10 @@ public final class RouletteAdminCommand implements CommandExecutor {
                 boolean applyAll = args.length >= 2 && args[1].equalsIgnoreCase("all");
                 int materialArgIndex = applyAll ? 2 : 1;
                 if (args.length <= materialArgIndex) {
-                    player.sendMessage(ChatColor.YELLOW + "Usage: /rouletteadmin " + args[0].toLowerCase() + " [all] <BLOCK|reset>");
+                    player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                            "messages.roulette.command.board-usage",
+                            "&eUsage: /rouletteadmin %command% [all] <BLOCK|reset>"
+                    ).replace("%command%", args[0].toLowerCase())));
                     return true;
                 }
                 String materialName = args[materialArgIndex];
@@ -79,11 +103,17 @@ public final class RouletteAdminCommand implements CommandExecutor {
                     case "setblack" -> rouletteManager.setBlackMaterial(player, materialName, applyAll);
                     case "setgreen" -> rouletteManager.setGreenMaterial(player, materialName, applyAll);
                     case "setselector" -> rouletteManager.setSelectorMaterial(player, materialName, applyAll);
-                    default -> player.sendMessage(ChatColor.RED + "Unknown material command.");
+                    default -> player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                            "messages.roulette.command.unknown-material-command",
+                            "&cUnknown material command."
+                    )));
                 }
             }
             case "reload" -> rouletteManager.reloadConfig(player);
-            default -> player.sendMessage(ChatColor.YELLOW + "Usage: /rouletteadmin <create|remove|regen|list|set|setframe|setred|setblack|setgreen|setselector|casinoframe|housebalance|housewithdraw|reload>");
+            default -> player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                    "messages.roulette.command.admin-usage",
+                    "&eUsage: /rouletteadmin <create|remove|regen|list|set|setframe|setred|setblack|setgreen|setselector|casinoframe|housebalance|housewithdraw|reload>"
+            )));
         }
         return true;
     }

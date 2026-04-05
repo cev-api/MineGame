@@ -15,7 +15,10 @@ public final class CasinoFrameCommand {
 
     public boolean execute(Player player, String[] args) {
         if (!player.hasPermission("mine.admin")) {
-            player.sendMessage(ChatColor.RED + "No permission.");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.shared.no-permission",
+                    "&cNo permission."
+            )));
             return true;
         }
 
@@ -35,7 +38,10 @@ public final class CasinoFrameCommand {
         if (!applyAll) {
             station = minesManager.stationFromPlayerBeacon(player);
             if (station == null) {
-                player.sendMessage(ChatColor.RED + "Stand on a beacon station to edit that station's casino frame.");
+                player.sendMessage(minesManager.colorize(minesManager.text(
+                        "messages.minegame.admin.casino-frame.not-on-station",
+                        "&cStand on a beacon station to edit that station's casino frame."
+                )));
                 return true;
             }
         }
@@ -46,7 +52,10 @@ public final class CasinoFrameCommand {
                 applyResetAll(player);
             } else {
                 minesManager.saveStation(station.clearFrameAnimationOverrides(), true);
-                player.sendMessage(ChatColor.GREEN + "Casino frame overrides reset for this station.");
+                player.sendMessage(minesManager.colorize(minesManager.text(
+                        "messages.minegame.admin.casino-frame.reset-station",
+                        "&aCasino frame overrides reset for this station."
+                )));
             }
             frameAnimator.reloadFromCurrentConfig();
             return true;
@@ -58,7 +67,10 @@ public final class CasinoFrameCommand {
             } else {
                 StationData updated = station.withFrameAnimation(false, station.frameAnimBlock(), station.frameAnimPattern(), station.frameAnimMode());
                 minesManager.saveStation(updated, true);
-                player.sendMessage(ChatColor.YELLOW + "Casino frame animation disabled for this station.");
+                player.sendMessage(minesManager.colorize(minesManager.text(
+                        "messages.minegame.admin.casino-frame.disabled-station",
+                        "&eCasino frame animation disabled for this station."
+                )));
             }
             frameAnimator.reloadFromCurrentConfig();
             return true;
@@ -66,12 +78,18 @@ public final class CasinoFrameCommand {
 
         if (first.equalsIgnoreCase("mode")) {
             if (args.length <= offset + 1) {
-                player.sendMessage(ChatColor.YELLOW + "Usage: /minegameadmin casinoframe " + (applyAll ? "all " : "") + "mode <idle_only|always>");
+                player.sendMessage(minesManager.colorize(minesManager.text(
+                        "messages.minegame.command.casino-frame-mode-usage",
+                        "&eUsage: /minegameadmin casinoframe %scope%mode <idle_only|always>"
+                ).replace("%scope%", applyAll ? "all " : "")));
                 return true;
             }
             String mode = args[offset + 1].toLowerCase();
             if (!mode.equals("idle_only") && !mode.equals("always")) {
-                player.sendMessage(ChatColor.RED + "Mode must be idle_only or always.");
+                player.sendMessage(minesManager.colorize(minesManager.text(
+                        "messages.minegame.admin.casino-frame.invalid-mode",
+                        "&cMode must be idle_only or always."
+                )));
                 return true;
             }
             if (applyAll) {
@@ -79,7 +97,10 @@ public final class CasinoFrameCommand {
             } else {
                 StationData updated = station.withFrameAnimation(true, station.frameAnimBlock(), station.frameAnimPattern(), mode);
                 minesManager.saveStation(updated, true);
-                player.sendMessage(ChatColor.GREEN + "Casino frame mode set to " + mode + " for this station.");
+                player.sendMessage(minesManager.colorize(minesManager.text(
+                        "messages.minegame.admin.casino-frame.mode-set-station",
+                        "&aCasino frame mode set to %mode% for this station."
+                ).replace("%mode%", mode)));
             }
             frameAnimator.reloadFromCurrentConfig();
             return true;
@@ -92,18 +113,27 @@ public final class CasinoFrameCommand {
 
         Material block = Material.matchMaterial(first);
         if (block == null || !block.isBlock()) {
-            player.sendMessage(ChatColor.RED + "Invalid block material.");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.shared.invalid-block-material",
+                    "&cInvalid block material."
+            )));
             return true;
         }
         int pattern;
         try {
             pattern = Integer.parseInt(args[offset + 1]);
         } catch (NumberFormatException ex) {
-            player.sendMessage(ChatColor.RED + "Pattern must be a number (1-10).");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.shared.pattern-not-number",
+                    "&cPattern must be a number (1-10)."
+            )));
             return true;
         }
         if (pattern < 1 || pattern > 10) {
-            player.sendMessage(ChatColor.RED + "Pattern must be between 1 and 10.");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.shared.pattern-out-of-range",
+                    "&cPattern must be between 1 and 10."
+            )));
             return true;
         }
 
@@ -112,7 +142,10 @@ public final class CasinoFrameCommand {
         } else {
             StationData updated = station.withFrameAnimation(true, block.name(), pattern, station.frameAnimMode());
             minesManager.saveStation(updated, true);
-            player.sendMessage(ChatColor.GREEN + "Casino frame updated for this station: " + block.name() + ", pattern " + pattern + ".");
+            player.sendMessage(minesManager.colorize(minesManager.text(
+                    "messages.minegame.admin.casino-frame.updated-station",
+                    "&aCasino frame updated for this station: %block%, pattern %pattern%."
+            ).replace("%block%", block.name()).replace("%pattern%", String.valueOf(pattern))));
         }
         frameAnimator.reloadFromCurrentConfig();
         return true;
@@ -124,7 +157,10 @@ public final class CasinoFrameCommand {
             updated.add(station.clearFrameAnimationOverrides());
         }
         minesManager.saveAllStations(updated, true);
-        player.sendMessage(ChatColor.GREEN + "Casino frame overrides reset for all stations.");
+        player.sendMessage(minesManager.colorize(minesManager.text(
+                "messages.minegame.admin.casino-frame.reset-all",
+                "&aCasino frame overrides reset for all stations."
+        )));
     }
 
     private void applyAll(Player player, boolean enabled, String block, Integer pattern, String mode) {
@@ -136,16 +172,23 @@ public final class CasinoFrameCommand {
             updated.add(station.withFrameAnimation(enabled, resolvedBlock, resolvedPattern, resolvedMode));
         }
         minesManager.saveAllStations(updated, true);
-        player.sendMessage(ChatColor.GREEN + "Casino frame settings applied to all stations.");
+        player.sendMessage(minesManager.colorize(minesManager.text(
+                "messages.minegame.admin.casino-frame.applied-all",
+                "&aCasino frame settings applied to all stations."
+        )));
     }
 
     private void sendUsage(Player player) {
-        player.sendMessage(ChatColor.YELLOW + "Usage:");
-        player.sendMessage(ChatColor.YELLOW + "/minegameadmin casinoframe <block> <pattern 1-10>  (this station)");
-        player.sendMessage(ChatColor.YELLOW + "/minegameadmin casinoframe mode <idle_only|always>   (this station)");
-        player.sendMessage(ChatColor.YELLOW + "/minegameadmin casinoframe off|reset                 (this station)");
-        player.sendMessage(ChatColor.YELLOW + "/minegameadmin casinoframe all <block> <pattern 1-10>");
-        player.sendMessage(ChatColor.YELLOW + "/minegameadmin casinoframe all mode <idle_only|always>");
-        player.sendMessage(ChatColor.YELLOW + "/minegameadmin casinoframe all off|reset");
+        for (String line : minesManager.lines("messages.minegame.command.casino-frame-usage-lines", java.util.List.of(
+                "&eUsage:",
+                "&e/minegameadmin casinoframe <block> <pattern 1-10>  (this station)",
+                "&e/minegameadmin casinoframe mode <idle_only|always>   (this station)",
+                "&e/minegameadmin casinoframe off|reset                 (this station)",
+                "&e/minegameadmin casinoframe all <block> <pattern 1-10>",
+                "&e/minegameadmin casinoframe all mode <idle_only|always>",
+                "&e/minegameadmin casinoframe all off|reset"
+        ))) {
+            player.sendMessage(minesManager.colorize(line));
+        }
     }
 }

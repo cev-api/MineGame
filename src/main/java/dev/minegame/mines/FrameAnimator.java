@@ -39,11 +39,11 @@ public final class FrameAnimator {
     }
 
     public void reloadFromCurrentConfig() {
-        this.defaultEnabled = plugin.getConfig().getBoolean("frame-animation.enabled", false);
-        this.defaultBlockType = parseBlock(plugin.getConfig().getString("frame-animation.block"), Material.REDSTONE_LAMP);
-        this.defaultPattern = clampPattern(plugin.getConfig().getInt("frame-animation.pattern", 1));
-        this.defaultMode = normalizeMode(plugin.getConfig().getString("frame-animation.mode", "idle_only"));
-        this.intervalTicks = Math.max(1, plugin.getConfig().getInt("frame-animation.interval-ticks", 6));
+        this.defaultEnabled = plugin.getConfig().getBoolean("minegame.frame-animation.enabled", false);
+        this.defaultBlockType = parseBlock(plugin.getConfig().getString("minegame.frame-animation.block"), Material.REDSTONE_LAMP);
+        this.defaultPattern = clampPattern(plugin.getConfig().getInt("minegame.frame-animation.pattern", 1));
+        this.defaultMode = normalizeMode(plugin.getConfig().getString("minegame.frame-animation.mode", "idle_only"));
+        this.intervalTicks = Math.max(1, plugin.getConfig().getInt("minegame.frame-animation.interval-ticks", 6));
 
         if (task != null) {
             task.cancel();
@@ -55,7 +55,7 @@ public final class FrameAnimator {
 
     private void animateTick() {
         tick++;
-        double activationDistance = Math.max(0.0, plugin.getConfig().getDouble("casino-frame-activation-distance", 20.0));
+        double activationDistance = Math.max(0.0, plugin.getConfig().getDouble("minegame.casino-frame-activation-distance", 20.0));
         for (StationData station : minesManager.stations()) {
             BoardGeometry geometry;
             try {

@@ -15,11 +15,17 @@ public final class RouletteCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                    "messages.shared.only-players",
+                    "Only players can use this command."
+            )));
             return true;
         }
         if (args.length < 2) {
-            player.sendMessage("Usage: /roulette <red|black|green> <amount>");
+            player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                    "messages.roulette.command.usage",
+                    "Usage: /roulette <red|black|green> <amount>"
+            )));
             return true;
         }
         RouletteColor color = RouletteColor.fromInput(args[0]);
@@ -27,7 +33,10 @@ public final class RouletteCommand implements CommandExecutor {
         try {
             amount = Double.parseDouble(args[1]);
         } catch (NumberFormatException ex) {
-            player.sendMessage("Amount must be a number.");
+            player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                    "messages.roulette.command.amount-not-number",
+                    "Amount must be a number."
+            )));
             return true;
         }
         rouletteManager.placeBet(player, color, amount);

@@ -80,41 +80,41 @@ public final class MinesTabCompleter implements TabCompleter {
             }
             if (args.length == 2 && args[0].equalsIgnoreCase("set")) {
                 return filterPrefix(args[1], Arrays.asList(
-                        "roulette.board-size",
-                        "roulette.red-percent",
-                        "roulette.black-percent",
-                        "roulette.green-percent",
-                        "roulette.betting-seconds",
-                        "roulette.spin-seconds",
-                        "roulette.result-seconds",
-                        "roulette.min-bet",
-                        "roulette.max-bet",
-                        "roulette.red-multiplier",
-                        "roulette.black-multiplier",
-                        "roulette.green-multiplier",
-                        "roulette.house-edge-percent",
-                        "roulette.max-payout",
-                        "roulette.max-bet-distance",
-                        "roulette.activation-distance-from-frame",
-                        "roulette.hologram-height",
-                        "roulette.hologram-line-spacing",
-                        "roulette.hologram-view-range",
-                        "roulette.hologram-title-gap",
-                        "roulette.hologram-section-gap",
-                        "roulette.fireworks-per-winner",
-                        "roulette.broadcast-top-winner",
-                        "roulette.blocks.frame",
-                        "roulette.blocks.red",
-                        "roulette.blocks.black",
-                        "roulette.blocks.green",
-                        "roulette.blocks.selector"
+                        "board-size",
+                        "red-percent",
+                        "black-percent",
+                        "green-percent",
+                        "betting-seconds",
+                        "spin-seconds",
+                        "result-seconds",
+                        "min-bet",
+                        "max-bet",
+                        "red-multiplier",
+                        "black-multiplier",
+                        "green-multiplier",
+                        "house-edge-percent",
+                        "max-payout",
+                        "max-bet-distance",
+                        "activation-distance-from-frame",
+                        "hologram-height",
+                        "hologram-line-spacing",
+                        "hologram-view-range",
+                        "hologram-title-gap",
+                        "hologram-section-gap",
+                        "fireworks-per-winner",
+                        "broadcast-top-winner",
+                        "blocks.frame",
+                        "blocks.red",
+                        "blocks.black",
+                        "blocks.green",
+                        "blocks.selector"
                 ));
             }
             if (args.length == 3 && args[0].equalsIgnoreCase("set")) {
-                if (args[1].equalsIgnoreCase("roulette.broadcast-top-winner")) {
+                if (args[1].equalsIgnoreCase("broadcast-top-winner")) {
                     return filterPrefix(args[2], Arrays.asList("true", "false", "on", "off"));
                 }
-                if (args[1].startsWith("roulette.blocks.")) {
+                if (args[1].startsWith("blocks.")) {
                     return materialSuggestions(args[2]);
                 }
             }
@@ -189,21 +189,31 @@ public final class MinesTabCompleter implements TabCompleter {
                         "hologram.line-spacing",
                         "hologram.view-range",
                         "hologram.behind-beacon-distance",
-                        "hologram.base-height"
+                        "hologram.base-height",
+                        "frame-animation.enabled",
+                        "frame-animation.block",
+                        "frame-animation.pattern",
+                        "frame-animation.mode",
+                        "frame-animation.interval-ticks"
                 ));
             }
             if (args.length == 3 && args[0].equalsIgnoreCase("set")) {
                 if (args[1].equalsIgnoreCase("effects.fireworks-on-win")
                         || args[1].equalsIgnoreCase("board.frame-one-higher")
                         || args[1].equalsIgnoreCase("hologram.enabled")
+                        || args[1].equalsIgnoreCase("frame-animation.enabled")
                         || args[1].equalsIgnoreCase("announcements.broadcast-start")
                         || args[1].equalsIgnoreCase("announcements.broadcast-cashout")
                         || args[1].equalsIgnoreCase("announcements.broadcast-win")
                         || args[1].equalsIgnoreCase("announcements.send-welcome-on-start")) {
                     return filterPrefix(args[2], Arrays.asList("true", "false", "on", "off"));
                 }
-                if (args[1].startsWith("board.") && args[1].endsWith("-block")) {
+                if ((args[1].startsWith("board.") && args[1].endsWith("-block"))
+                        || args[1].equalsIgnoreCase("frame-animation.block")) {
                     return materialSuggestions(args[2]);
+                }
+                if (args[1].equalsIgnoreCase("frame-animation.mode")) {
+                    return filterPrefix(args[2], Arrays.asList("idle_only", "always"));
                 }
             }
             if (args.length == 2 && isSetCommand(args[0])) {

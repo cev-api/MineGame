@@ -125,7 +125,7 @@ public final class RouletteManager {
         for (StationRuntime runtime : runtimes.values()) {
             startRound(runtime);
         }
-        requester.sendMessage(color(msg("roulette.messages.reloaded", "&aRoulette config reloaded.")));
+        requester.sendMessage(color(text("messages.roulette.admin.reloaded", "&aRoulette config reloaded.")));
     }
 
     public void createStation(Player player) {
@@ -137,13 +137,13 @@ public final class RouletteManager {
         StationRuntime runtime = new StationRuntime(station);
         runtimes.put(station.key(), runtime);
         startRound(runtime);
-        player.sendMessage(color(msg("roulette.messages.created", "&aRoulette station created.")));
+        player.sendMessage(color(text("messages.roulette.admin.created", "&aRoulette station created.")));
     }
 
     public void removeStation(Player player) {
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         if (runtime.spinTask != null) {
@@ -161,32 +161,39 @@ public final class RouletteManager {
         runtimes.remove(runtime.station.key());
         stationStorage.remove(runtime.station.key());
         stationStorage.save();
-        player.sendMessage(color(msg("roulette.messages.removed", "&eRoulette station removed.")));
+        player.sendMessage(color(text("messages.roulette.admin.removed", "&eRoulette station removed.")));
     }
 
     public void regenerateStation(Player player) {
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         startRound(runtime);
-        player.sendMessage(color(msg("roulette.messages.regenerated", "&aRoulette station regenerated.")));
+        player.sendMessage(color(text("messages.roulette.admin.regenerated", "&aRoulette station regenerated.")));
     }
 
     public void listStations(Player player) {
-        player.sendMessage(color("&6[Roulette] &fStations: &e" + runtimes.size()));
+        player.sendMessage(color(replace(text("messages.roulette.admin.station-list-header", "&6[Roulette] &fStations: &e%count%"), Map.of(
+                "%count%", String.valueOf(runtimes.size())
+        ))));
         for (StationRuntime runtime : runtimes.values()) {
             RouletteStationData s = runtime.station;
-            player.sendMessage(color("&7- &f" + s.worldName() + " &7(" + s.x() + ", " + s.y() + ", " + s.z() + ")"));
+            player.sendMessage(color(replace(text("messages.roulette.admin.station-list-entry", "&7- &f%world% &7(%x%, %y%, %z%)"), Map.of(
+                    "%world%", s.worldName(),
+                    "%x%", String.valueOf(s.x()),
+                    "%y%", String.valueOf(s.y()),
+                    "%z%", String.valueOf(s.z())
+            ))));
         }
     }
 
     public void setConfigValue(Player player, String pathInput, String valueInput) {
-        String path = pathInput.toLowerCase();
+        String path = normalizeConfigPath(pathInput);
         Object parsed = parseConfigValue(path, valueInput);
         if (parsed == null) {
-            player.sendMessage(color(msg("roulette.messages.config-invalid", "&cInvalid roulette config value/path.")));
+            player.sendMessage(color(text("messages.roulette.admin.config-invalid", "&cInvalid roulette config value/path.")));
             return;
         }
         plugin.getConfig().set(path, parsed);
@@ -195,11 +202,14 @@ public final class RouletteManager {
         for (StationRuntime runtime : runtimes.values()) {
             startRound(runtime);
         }
-        player.sendMessage(color("&aSet &f" + path + " &ato &f" + parsed + "&a."));
+        player.sendMessage(color(replace(text("messages.roulette.admin.config-set", "&aSet &f%path% &ato &f%value%&a."), Map.of(
+                "%path%", path,
+                "%value%", String.valueOf(parsed)
+        ))));
     }
 
     public Object getCurrentConfigValue(String path) {
-        return plugin.getConfig().get(path);
+        return plugin.getConfig().get(normalizeConfigPath(path));
     }
 
     public void saveStation(RouletteStationData station, boolean regenerateBoard) {
@@ -255,7 +265,7 @@ public final class RouletteManager {
     ) {
         Material material = Material.matchMaterial(materialName);
         if (material == null || !material.isBlock()) {
-            player.sendMessage(color("&cInvalid block material."));
+            player.sendMessage(color(text("messages.shared.invalid-block-material", "&cInvalid block material.")));
             return;
         }
         if (applyAll) {
@@ -271,13 +281,16 @@ public final class RouletteManager {
                 });
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&a" + label + " set to &f" + material.name() + " &afor all roulette stations."));
+            player.sendMessage(color(replace(text("messages.roulette.admin.board-material-set-all", "&a%label% set to &f%material% &afor all roulette stations."), Map.of(
+                    "%label%", label,
+                    "%material%", material.name()
+            ))));
             return;
         }
 
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         RouletteStationData station = runtime.station;
@@ -290,7 +303,10 @@ public final class RouletteManager {
             default -> station;
         };
         saveStation(updated, true);
-        player.sendMessage(color("&a" + label + " set to &f" + material.name() + "&a for this roulette station."));
+        player.sendMessage(color(replace(text("messages.roulette.admin.board-material-set-station", "&a%label% set to &f%material%&a for this roulette station."), Map.of(
+                "%label%", label,
+                "%material%", material.name()
+        ))));
     }
 
     public void setFrameMaterial(Player player, String materialName, boolean applyAll) {
@@ -320,26 +336,26 @@ public final class RouletteManager {
                 updated.add(station.clearBoardMaterialOverrides());
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&aRoulette board material overrides reset for all stations."));
+            player.sendMessage(color(text("messages.roulette.admin.board-material-reset-all", "&aRoulette board material overrides reset for all stations.")));
             return;
         }
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         saveStation(runtime.station.clearBoardMaterialOverrides(), true);
-        player.sendMessage(color("&aRoulette board material overrides reset for this station."));
+        player.sendMessage(color(text("messages.roulette.admin.board-material-reset-station", "&aRoulette board material overrides reset for this station.")));
     }
 
     public void setFrameAnimation(Player player, String blockName, int pattern, boolean applyAll) {
         Material block = Material.matchMaterial(blockName);
         if (block == null || !block.isBlock()) {
-            player.sendMessage(color("&cInvalid block material."));
+            player.sendMessage(color(text("messages.shared.invalid-block-material", "&cInvalid block material.")));
             return;
         }
         if (pattern < 1 || pattern > 10) {
-            player.sendMessage(color("&cPattern must be between 1 and 10."));
+            player.sendMessage(color(text("messages.shared.pattern-out-of-range", "&cPattern must be between 1 and 10.")));
             return;
         }
         if (applyAll) {
@@ -348,22 +364,28 @@ public final class RouletteManager {
                 updated.add(station.withFrameAnimation(true, block.name(), pattern, null));
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&aRoulette casino frame updated for all stations: &f" + block.name() + "&a, pattern &f" + pattern + "&a."));
+            player.sendMessage(color(replace(text("messages.roulette.admin.casino-frame.updated-all", "&aRoulette casino frame updated for all stations: &f%block%&a, pattern &f%pattern%&a."), Map.of(
+                    "%block%", block.name(),
+                    "%pattern%", String.valueOf(pattern)
+            ))));
             return;
         }
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         saveStation(runtime.station.withFrameAnimation(true, block.name(), pattern, null), true);
-        player.sendMessage(color("&aRoulette casino frame updated: &f" + block.name() + "&a, pattern &f" + pattern + "&a."));
+        player.sendMessage(color(replace(text("messages.roulette.admin.casino-frame.updated-station", "&aRoulette casino frame updated: &f%block%&a, pattern &f%pattern%&a."), Map.of(
+                "%block%", block.name(),
+                "%pattern%", String.valueOf(pattern)
+        ))));
     }
 
     public void setFrameAnimationMode(Player player, String mode, boolean applyAll) {
         String normalized = normalizeRouletteFrameMode(mode);
         if (normalized == null) {
-            player.sendMessage(color("&cMode must be always or betting_only."));
+            player.sendMessage(color(text("messages.roulette.admin.casino-frame.invalid-mode", "&cMode must be always or betting_only.")));
             return;
         }
         if (applyAll) {
@@ -372,16 +394,20 @@ public final class RouletteManager {
                 updated.add(station.withFrameAnimation(true, null, null, normalized));
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&aRoulette casino frame mode set to &f" + normalized + " &afor all stations."));
+            player.sendMessage(color(replace(text("messages.roulette.admin.casino-frame.mode-set-all", "&aRoulette casino frame mode set to &f%mode% &afor all stations."), Map.of(
+                    "%mode%", normalized
+            ))));
             return;
         }
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         saveStation(runtime.station.withFrameAnimation(true, null, null, normalized), true);
-        player.sendMessage(color("&aRoulette casino frame mode set to &f" + normalized + "&a."));
+        player.sendMessage(color(replace(text("messages.roulette.admin.casino-frame.mode-set-station", "&aRoulette casino frame mode set to &f%mode%&a."), Map.of(
+                "%mode%", normalized
+        ))));
     }
 
     public void disableFrameAnimation(Player player, boolean applyAll) {
@@ -391,16 +417,16 @@ public final class RouletteManager {
                 updated.add(station.withFrameAnimation(false, null, null, null));
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&eRoulette casino frame animation disabled for all stations."));
+            player.sendMessage(color(text("messages.roulette.admin.casino-frame.disabled-all", "&eRoulette casino frame animation disabled for all stations.")));
             return;
         }
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         saveStation(runtime.station.withFrameAnimation(false, null, null, null), true);
-        player.sendMessage(color("&eRoulette casino frame animation disabled."));
+        player.sendMessage(color(text("messages.roulette.admin.casino-frame.disabled-station", "&eRoulette casino frame animation disabled.")));
     }
 
     public void resetFrameAnimationOverrides(Player player, boolean applyAll) {
@@ -410,16 +436,16 @@ public final class RouletteManager {
                 updated.add(station.clearFrameAnimationOverrides());
             }
             saveAllStations(updated, true);
-            player.sendMessage(color("&aRoulette casino frame animation overrides reset for all stations."));
+            player.sendMessage(color(text("messages.roulette.admin.casino-frame.reset-all", "&aRoulette casino frame animation overrides reset for all stations.")));
             return;
         }
         StationRuntime runtime = runtimeForPlayer(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-on-station", "&cStand on a roulette board/frame to use this.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-on-station", "&cStand on a roulette board/frame to use this.")));
             return;
         }
         saveStation(runtime.station.clearFrameAnimationOverrides(), true);
-        player.sendMessage(color("&aRoulette casino frame animation overrides reset for this station."));
+        player.sendMessage(color(text("messages.roulette.admin.casino-frame.reset-station", "&aRoulette casino frame animation overrides reset for this station.")));
     }
 
     public RouletteBoardGeometry geometryForStation(RouletteStationData station) {
@@ -435,12 +461,12 @@ public final class RouletteManager {
         Boolean stationEnabled = station.frameAnimEnabled();
         return stationEnabled != null
                 ? stationEnabled
-                : plugin.getConfig().getBoolean("roulette-frame-animation.enabled", false);
+                : plugin.getConfig().getBoolean("roulette.frame-animation.enabled", false);
     }
 
     public Material frameAnimationBlock(RouletteStationData station) {
         Material global = parseMaterial(
-                plugin.getConfig().getString("roulette-frame-animation.block"),
+                plugin.getConfig().getString("roulette.frame-animation.block"),
                 Material.REDSTONE_LAMP
         );
         return parseMaterial(station.frameAnimBlock(), global);
@@ -448,7 +474,7 @@ public final class RouletteManager {
 
     public int frameAnimationPattern(RouletteStationData station) {
         Integer stationPattern = station.frameAnimPattern();
-        int global = plugin.getConfig().getInt("roulette-frame-animation.pattern", 1);
+        int global = plugin.getConfig().getInt("roulette.frame-animation.pattern", 1);
         return stationPattern != null ? stationPattern : global;
     }
 
@@ -457,31 +483,31 @@ public final class RouletteManager {
         if (stationMode != null) {
             return stationMode;
         }
-        return normalizeRouletteFrameMode(plugin.getConfig().getString("roulette-frame-animation.mode", "always"));
+        return normalizeRouletteFrameMode(plugin.getConfig().getString("roulette.frame-animation.mode", "always"));
     }
 
     public void placeBet(Player player, RouletteColor color, double amount) {
         if (color == null) {
-            player.sendMessage(color(msg("roulette.messages.invalid-color", "&cUse red, black or green.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.invalid-color", "&cUse red, black or green.")));
             return;
         }
         if (amount < minBet || (maxBet > 0 && amount > maxBet)) {
-            player.sendMessage(color(msg("roulette.messages.invalid-bet", "&cInvalid bet amount.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.invalid-bet", "&cInvalid bet amount.")));
             return;
         }
         StationRuntime runtime = stationForBet(player);
         if (runtime == null) {
-            player.sendMessage(color(msg("roulette.messages.not-near", "&cYou are not near a roulette station.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.not-near", "&cYou are not near a roulette station.")));
             return;
         }
         if (runtime.phase != Phase.BETTING || runtime.secondsLeft <= 0) {
-            player.sendMessage(color(msg("roulette.messages.bet-closed", "&cBetting is closed.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.bet-closed", "&cBetting is closed.")));
             return;
         }
 
         EconomyResponse withdraw = economy.withdrawPlayer(player, amount);
         if (!withdraw.transactionSuccess()) {
-            player.sendMessage(color(msg("roulette.messages.no-money", "&cYou do not have enough money.")));
+            player.sendMessage(color(text("messages.roulette.gameplay.no-money", "&cYou do not have enough money.")));
             return;
         }
 
@@ -499,8 +525,8 @@ public final class RouletteManager {
         double effectiveMult = effectiveMultiplier(updatedBet.color());
         double potential = clampPayout(updatedBet.amount() * effectiveMult);
         double profit = Math.max(0.0, potential - updatedBet.amount());
-        player.sendMessage(color(replace(msg(
-                "roulette.messages.bet-placed",
+        player.sendMessage(color(replace(text(
+                "messages.roulette.gameplay.bet-placed",
                 "&aBet: &f%color% &7| &eW: &6$%amount% &7| &eM: &a%xmult%x &7| &eP: &6$%potential% &7| &a+$%profit%"
         ), Map.of(
                 "%color%", updatedBet.color().displayName(),
@@ -586,16 +612,25 @@ public final class RouletteManager {
         List<ResultEntry> results = settle(runtime, win);
 
         runtime.resultLines.clear();
-        runtime.resultLines.add("&eLanded on " + win.colorCode() + win.displayName());
+        runtime.resultLines.add(replace(text(
+                "messages.roulette.gameplay.result-landed-on",
+                "&eLanded on %color%"
+        ), Map.of("%color%", win.colorCode() + win.displayName())));
         for (ResultEntry entry : results.stream().limit(8).toList()) {
             String profitColor = entry.net >= 0 ? "&a" : "&c";
             String profitPrefix = entry.net >= 0 ? "+" : "-";
-            runtime.resultLines.add(
-                    profitColor + profitPrefix + "$" + MONEY.format(Math.abs(entry.net))
-                            + " &7| &f" + entry.player
-                            + " &7| " + entry.color.colorCode() + entry.color.displayName()
-                            + " &7| &6$" + MONEY.format(entry.payout)
-            );
+            runtime.resultLines.add(replace(text(
+                    "messages.roulette.gameplay.result-entry",
+                    "%profit_color%%profit_prefix%$%net% &7| &f%player% &7| %color_code%%color% &7| &6$%payout%"
+            ), Map.of(
+                    "%profit_color%", profitColor,
+                    "%profit_prefix%", profitPrefix,
+                    "%net%", MONEY.format(Math.abs(entry.net)),
+                    "%player%", entry.player,
+                    "%color_code%", entry.color.colorCode(),
+                    "%color%", entry.color.displayName(),
+                    "%payout%", MONEY.format(entry.payout)
+            )));
         }
 
         applyWinWipe(runtime, win);
@@ -636,8 +671,8 @@ public final class RouletteManager {
             if (online != null) {
                 if (payout > 0) {
                     double effectiveMult = effectiveMultiplier(win);
-                    online.sendMessage(color(replace(msg(
-                            "roulette.messages.win-private",
+                    online.sendMessage(color(replace(text(
+                            "messages.roulette.gameplay.win-private",
                             "&aWon: &6$%payout% &7(%xmult%x) &7| &a+$%profit% &7| &f%color%"
                     ), Map.of(
                             "%payout%", MONEY.format(payout),
@@ -646,8 +681,8 @@ public final class RouletteManager {
                             "%color%", win.displayName()
                     ))));
                 } else {
-                    online.sendMessage(color(replace(msg(
-                            "roulette.messages.lose-private",
+                    online.sendMessage(color(replace(text(
+                            "messages.roulette.gameplay.lose-private",
                             "&cLost: &6$%amount% &7| &f%color%"
                     ), Map.of(
                             "%amount%", MONEY.format(bet.amount()),
@@ -662,7 +697,7 @@ public final class RouletteManager {
         }
 
         if (broadcastTopWinner && topWinner != null) {
-            Bukkit.broadcastMessage(color(replace(msg("roulette.messages.top-winner-broadcast", "&6[Roulette] &f%player% won &a$%payout% &fon %color%!"), Map.of(
+            Bukkit.broadcastMessage(color(replace(text("messages.roulette.gameplay.top-winner-broadcast", "&6[Roulette] &f%player% won &a$%payout% &fon %color%!"), Map.of(
                     "%player%", topWinner.player,
                     "%payout%", MONEY.format(topWinner.payout),
                     "%color%", win.displayName()
@@ -682,20 +717,30 @@ public final class RouletteManager {
         double wagered = houseBalanceStorage.rouletteTotalWagered();
         double paid = houseBalanceStorage.rouletteTotalPayout();
         double edge = wagered <= 0.0 ? 0.0 : ((wagered - paid) / wagered) * 100.0;
-        player.sendMessage(color("&6[Roulette] &eHouse Balance: &a$" + MONEY.format(balance)
-                + " &7| &eEdge: &a" + MONEY.format(edge) + "%"));
-        player.sendMessage(color("&7Wagered: &f$" + MONEY.format(wagered)
-                + " &7| Paid: &f$" + MONEY.format(paid)));
+        player.sendMessage(color(replace(text(
+                "messages.roulette.admin.house-balance-header",
+                "&6[Roulette] &eHouse Balance: &a$%balance% &7| &eEdge: &a%edge%%"
+        ), Map.of(
+                "%balance%", MONEY.format(balance),
+                "%edge%", MONEY.format(edge)
+        ))));
+        player.sendMessage(color(replace(text(
+                "messages.roulette.admin.house-balance-details",
+                "&7Wagered: &f$%wagered% &7| Paid: &f$%paid%"
+        ), Map.of(
+                "%wagered%", MONEY.format(wagered),
+                "%paid%", MONEY.format(paid)
+        ))));
     }
 
     public void withdrawHouseBalance(Player player, String rawAmount) {
         if (!player.hasPermission("roulette.admin")) {
-            player.sendMessage(color("&cNo permission."));
+            player.sendMessage(color(text("messages.shared.no-permission", "&cNo permission.")));
             return;
         }
         double current = houseBalanceStorage.rouletteBalance();
         if (current <= 0.0) {
-            player.sendMessage(color("&6[Roulette] &cNo house balance available to withdraw."));
+            player.sendMessage(color(text("messages.roulette.admin.house-no-balance", "&6[Roulette] &cNo house balance available to withdraw.")));
             return;
         }
         double wanted;
@@ -705,28 +750,34 @@ public final class RouletteManager {
             try {
                 wanted = Double.parseDouble(rawAmount);
             } catch (NumberFormatException ex) {
-                player.sendMessage(color("&cAmount must be a number or 'all'."));
+                player.sendMessage(color(text("messages.shared.amount-must-be-number-or-all", "&cAmount must be a number or 'all'.")));
                 return;
             }
             if (wanted <= 0.0) {
-                player.sendMessage(color("&cAmount must be greater than 0."));
+                player.sendMessage(color(text("messages.shared.amount-must-be-greater-than-zero", "&cAmount must be greater than 0.")));
                 return;
             }
         }
 
         double withdrawn = houseBalanceStorage.withdrawRoulette(wanted);
         if (withdrawn <= 0.0) {
-            player.sendMessage(color("&6[Roulette] &cNothing to withdraw."));
+            player.sendMessage(color(text("messages.roulette.admin.house-nothing-to-withdraw", "&6[Roulette] &cNothing to withdraw.")));
             return;
         }
         EconomyResponse deposit = economy.depositPlayer(player, withdrawn);
         if (!deposit.transactionSuccess()) {
             houseBalanceStorage.refundRouletteWithdrawal(withdrawn);
-            player.sendMessage(color("&cEconomy error: withdraw failed."));
+            player.sendMessage(color(text("messages.shared.economy-withdraw-failed", "&cEconomy error: withdraw failed.")));
             return;
         }
-        player.sendMessage(color("&6[Roulette] &aWithdrew &6$" + MONEY.format(withdrawn) + " &afrom roulette house balance."));
-        player.sendMessage(color("&7Remaining roulette house balance: &a$" + MONEY.format(houseBalanceStorage.rouletteBalance())));
+        player.sendMessage(color(replace(text(
+                "messages.roulette.admin.house-withdraw-success",
+                "&6[Roulette] &aWithdrew &6$%amount% &afrom roulette house balance."
+        ), Map.of("%amount%", MONEY.format(withdrawn)))));
+        player.sendMessage(color(replace(text(
+                "messages.roulette.admin.house-remaining-balance",
+                "&7Remaining roulette house balance: &a$%balance%"
+        ), Map.of("%balance%", MONEY.format(houseBalanceStorage.rouletteBalance())))));
     }
 
     private void applyWinWipe(StationRuntime runtime, RouletteColor win) {
@@ -966,23 +1017,35 @@ public final class RouletteManager {
     private List<String> linesFor(StationRuntime runtime) {
         List<String> lines = new ArrayList<>();
         if (runtime.phase == Phase.BETTING) {
-            lines.add("&6&lROULETTE");
-            lines.add("&e" + runtime.secondsLeft + "s remaining to place bets");
-            lines.add("&7Type &e/roulette <red|black|green> <amount>");
+            lines.addAll(replaceLines(configuredLines(
+                    "messages.roulette.hologram.betting-lines",
+                    "&6&lROULETTE",
+                    "&e%seconds%s remaining to place bets",
+                    "&7Type &e/roulette <red|black|green> <amount>"
+            ), Map.of("%seconds%", String.valueOf(runtime.secondsLeft))));
         } else if (runtime.phase == Phase.SPINNING) {
-            lines.add("&6&lROULETTE");
-            lines.add("&eSpinning... &f" + runtime.secondsLeft + "s");
+            lines.addAll(replaceLines(configuredLines(
+                    "messages.roulette.hologram.spinning-lines",
+                    "&6&lROULETTE",
+                    "&eSpinning... &f%seconds%s"
+            ), Map.of("%seconds%", String.valueOf(runtime.secondsLeft))));
         } else {
-            lines.add("&6&lROULETTE");
+            lines.addAll(configuredLines(
+                    "messages.roulette.hologram.result-header-lines",
+                    "&6&lROULETTE"
+            ));
             if (runtime.resultLines.isEmpty()) {
-                lines.add("&eRound complete");
+                lines.addAll(configuredLines(
+                        "messages.roulette.hologram.result-empty-lines",
+                        "&eRound complete"
+                ));
             } else {
                 lines.addAll(runtime.resultLines);
             }
         }
 
         if (!runtime.bets.isEmpty() && runtime.phase != Phase.RESULT) {
-            lines.add("&7Bets:");
+            lines.add(text("messages.roulette.hologram.bets-header", "&7Bets:"));
             runtime.bets.entrySet().stream()
                     .sorted((a, b) -> Double.compare(b.getValue().amount(), a.getValue().amount()))
                     .limit(6)
@@ -995,12 +1058,32 @@ public final class RouletteManager {
                         double effectiveMult = effectiveMultiplier(bet.color());
                         double potential = clampPayout(bet.amount() * effectiveMult);
                         double profit = Math.max(0.0, potential - bet.amount());
-                        lines.add("&f" + name + " &7| " + bet.color().colorCode() + bet.color().displayName()
-                                + " &7| &e" + MONEY.format(effectiveMult) + "x"
-                                + " &7| &6$" + MONEY.format(bet.amount())
-                                + " &7-> &e$" + MONEY.format(potential)
-                                + " &7| &a+$" + MONEY.format(profit));
+                        lines.add(replace(text(
+                                "messages.roulette.hologram.bets-entry",
+                                "&f%player% &7| %color_code%%color% &7| &e%xmult%x &7| &6$%amount% &7-> &e$%potential% &7| &a+$%profit%"
+                        ), Map.of(
+                                "%player%", name,
+                                "%color_code%", bet.color().colorCode(),
+                                "%color%", bet.color().displayName(),
+                                "%xmult%", MONEY.format(effectiveMult),
+                                "%amount%", MONEY.format(bet.amount()),
+                                "%potential%", MONEY.format(potential),
+                                "%profit%", MONEY.format(profit)
+                        )));
                     });
+        }
+        return lines;
+    }
+
+    private List<String> configuredLines(String path, String... fallback) {
+        List<String> lines = plugin.getConfig().getStringList(path);
+        return lines.isEmpty() ? List.of(fallback) : List.copyOf(lines);
+    }
+
+    private List<String> replaceLines(List<String> templates, Map<String, String> vars) {
+        List<String> lines = new ArrayList<>(templates.size());
+        for (String template : templates) {
+            lines.add(replace(template, vars));
         }
         return lines;
     }
@@ -1251,9 +1334,6 @@ public final class RouletteManager {
         if (!path.startsWith("roulette.")) {
             return null;
         }
-        if (path.startsWith("roulette.messages.")) {
-            return raw;
-        }
         try {
             return switch (path) {
                 case "roulette.board-size", "roulette.betting-seconds", "roulette.spin-seconds", "roulette.result-seconds", "roulette.fireworks-per-winner" -> {
@@ -1304,6 +1384,11 @@ public final class RouletteManager {
         };
     }
 
+    private String normalizeConfigPath(String rawPath) {
+        String path = rawPath.toLowerCase();
+        return path.startsWith("roulette.") ? path : "roulette." + path;
+    }
+
     private String normalizeRouletteFrameMode(String raw) {
         if (raw == null) {
             return null;
@@ -1327,12 +1412,12 @@ public final class RouletteManager {
         Boolean stationEnabled = station.frameAnimEnabled();
         boolean animEnabled = stationEnabled != null
                 ? stationEnabled
-                : plugin.getConfig().getBoolean("roulette-frame-animation.enabled", false);
+                : plugin.getConfig().getBoolean("roulette.frame-animation.enabled", false);
         if (!animEnabled) {
             return frameBlockFor(station);
         }
         Material defaultAnimBlock = parseMaterial(
-                plugin.getConfig().getString("roulette-frame-animation.block"),
+                plugin.getConfig().getString("roulette.frame-animation.block"),
                 Material.REDSTONE_LAMP
         );
         return parseMaterial(station.frameAnimBlock(), defaultAnimBlock);
@@ -1358,9 +1443,21 @@ public final class RouletteManager {
         return parseMaterial(station.boardSelectorBlock(), selectorBlock);
     }
 
-    private String msg(String path, String fallback) {
+    public String text(String path, String fallback) {
         String v = plugin.getConfig().getString(path);
+        if (v == null && plugin.getConfig().getDefaults() != null) {
+            v = plugin.getConfig().getDefaults().getString(path);
+        }
         return v == null ? fallback : v;
+    }
+
+    public String colorize(String input) {
+        return color(input);
+    }
+
+    public List<String> lines(String path, List<String> fallback) {
+        List<String> lines = plugin.getConfig().getStringList(path);
+        return lines.isEmpty() ? List.copyOf(fallback) : List.copyOf(lines);
     }
 
     private String replace(String template, Map<String, String> vars) {
