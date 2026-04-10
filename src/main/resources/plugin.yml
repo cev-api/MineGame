@@ -1,5 +1,5 @@
 name: MineGames
-version: 1.0.1
+version: 1.0.2
 author: cev-api
 main: dev.minegame.mines.MinegamePlugin
 api-version: "1.21"
@@ -20,8 +20,18 @@ commands:
   rouletteadmin:
     description: Manage roulette stations.
     usage: /rouletteadmin <create|remove|regen|list|set|casinoframe|reload>
+  slotsadmin:
+    description: Manage slots stations.
+    usage: /slotsadmin <create [3-8] [1|2]|remove|regen|list|set|setouterframe|setinnerframe|setwinning|casinoframe|housebalance|housewithdraw|reload>
+  minegamesjoin:
+    description: Configure the new-player join gift.
+    usage: /minegamesjoin <true|false|set <amount>>
 permissions:
   mine.admin:
     default: op
   roulette.admin:
+    default: op
+  slots.admin:
+    default: op
+  minegamesjoin.admin:
     default: op

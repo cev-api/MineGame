@@ -45,6 +45,29 @@ public final class RouletteAdminCommand implements CommandExecutor {
             case "regen" -> rouletteManager.regenerateStation(player);
             case "list" -> rouletteManager.listStations(player);
             case "set" -> {
+                if (args.length >= 2 && args[1].equalsIgnoreCase("global")) {
+                    if (args.length == 3) {
+                        Object current = rouletteManager.getCurrentConfigValue(args[2]);
+                        player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                                "messages.roulette.command.current-config",
+                                "&eCurrent %path% = %value%"
+                        ).replace("%path%", args[2]).replace("%value%", String.valueOf(current))));
+                        player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                                "messages.roulette.command.set-global-usage",
+                                "&eUsage: /rouletteadmin set global <path> <value>"
+                        )));
+                        return true;
+                    }
+                    if (args.length < 4) {
+                        player.sendMessage(rouletteManager.colorize(rouletteManager.text(
+                                "messages.roulette.command.set-global-usage",
+                                "&eUsage: /rouletteadmin set global <path> <value>"
+                        )));
+                        return true;
+                    }
+                    rouletteManager.setConfigValue(player, args[2], args[3], true);
+                    return true;
+                }
                 if (args.length == 2) {
                     Object current = rouletteManager.getCurrentConfigValue(args[1]);
                     player.sendMessage(rouletteManager.colorize(rouletteManager.text(
@@ -53,12 +76,12 @@ public final class RouletteAdminCommand implements CommandExecutor {
                     ).replace("%path%", args[1]).replace("%value%", String.valueOf(current))));
                     player.sendMessage(rouletteManager.colorize(rouletteManager.text(
                             "messages.roulette.command.set-usage",
-                            "&eUsage: /rouletteadmin set <path> <value>"
+                            "&eUsage: /rouletteadmin set [global] <path> <value>"
                     )));
                 } else if (args.length < 3) {
                     player.sendMessage(rouletteManager.colorize(rouletteManager.text(
                             "messages.roulette.command.set-usage",
-                            "&eUsage: /rouletteadmin set <path> <value>"
+                            "&eUsage: /rouletteadmin set [global] <path> <value>"
                     )));
                 } else {
                     rouletteManager.setConfigValue(player, args[1], args[2]);

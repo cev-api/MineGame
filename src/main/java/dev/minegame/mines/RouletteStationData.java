@@ -17,7 +17,8 @@ public record RouletteStationData(
         Boolean frameAnimEnabled,
         String frameAnimBlock,
         Integer frameAnimPattern,
-        String frameAnimMode
+        String frameAnimMode,
+        Integer boardSize
 ) {
     public RouletteStationData {
         if (boardFrameBlock != null) {
@@ -41,10 +42,13 @@ public record RouletteStationData(
         if (frameAnimMode != null) {
             frameAnimMode = frameAnimMode.toLowerCase();
         }
+        if (boardSize != null) {
+            boardSize = Math.max(2, boardSize);
+        }
     }
 
     public RouletteStationData(String worldName, int x, int y, int z) {
-        this(worldName, x, y, z, null, null, null, null, null, null, null, null, null);
+        this(worldName, x, y, z, null, null, null, null, null, null, null, null, null, null);
     }
 
     public String key() {
@@ -79,7 +83,8 @@ public record RouletteStationData(
                 frameAnimEnabled,
                 frameAnimBlock,
                 frameAnimPattern,
-                frameAnimMode
+                frameAnimMode,
+                boardSize
         );
     }
 
@@ -97,7 +102,8 @@ public record RouletteStationData(
                 frameAnimEnabled,
                 frameAnimBlock,
                 frameAnimPattern,
-                frameAnimMode
+                frameAnimMode,
+                boardSize
         );
     }
 
@@ -115,7 +121,8 @@ public record RouletteStationData(
                 enabled,
                 block,
                 pattern,
-                mode
+                mode,
+                boardSize
         );
     }
 
@@ -133,7 +140,31 @@ public record RouletteStationData(
                 null,
                 null,
                 null,
-                null
+                null,
+                boardSize
         );
+    }
+
+    public RouletteStationData withBoardSize(Integer size) {
+        return new RouletteStationData(
+                worldName,
+                x,
+                y,
+                z,
+                boardFrameBlock,
+                boardRedBlock,
+                boardBlackBlock,
+                boardGreenBlock,
+                boardSelectorBlock,
+                frameAnimEnabled,
+                frameAnimBlock,
+                frameAnimPattern,
+                frameAnimMode,
+                size
+        );
+    }
+
+    public RouletteStationData clearBoardSizeOverride() {
+        return withBoardSize(null);
     }
 }

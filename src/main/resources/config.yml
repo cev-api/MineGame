@@ -75,6 +75,61 @@ roulette:
     mode: idle_only
     interval-ticks: 6
 
+slots:
+  cost-per-spin: 100.0
+  spin-seconds: 5
+  stop-interval-ticks: 12
+  result-seconds: 5
+  activation-distance-from-frame: 20.0
+  lever-placement: front_right_middle
+  spin-light-mode: flashing_fast
+  max-payout: -1
+  fireworks-per-win: 1
+  hologram-height: 5.8
+  hologram-line-spacing: 0.6
+  hologram-view-range: 20.0
+  blocks:
+    outer-frame: STONE
+    inner-frame: REDSTONE_LAMP
+    winning: DIAMOND_BLOCK
+    reel-options:
+    - GOLD_BLOCK
+    - EMERALD_BLOCK
+    - LAPIS_BLOCK
+    - REDSTONE_BLOCK
+    - DIAMOND_BLOCK
+    - COPPER_BLOCK
+    - NETHERITE_BLOCK
+    - HONEY_BLOCK
+    - SLIME_BLOCK
+  payout-multipliers:
+    1: 0.0
+    2: 0.5
+    3: 2.0
+    4: 5.0
+    5: 12.0
+    6: 30.0
+    7: 80.0
+    8: 200.0
+    9: 350.0
+    10: 600.0
+    11: 1000.0
+    12: 1600.0
+    13: 2500.0
+    14: 4000.0
+    15: 6500.0
+    16: 10000.0
+  frame-animation:
+    enabled: true
+    block: REDSTONE_LAMP
+    pattern: 4
+    mode: idle_only
+    interval-ticks: 6
+
+join-gift:
+  enabled: true
+  amount: 1000.0
+
 messages:
   shared:
     only-players: Only players can use this command.
@@ -86,6 +141,16 @@ messages:
     amount-must-be-number-or-all: '&cAmount must be a number or ''all''.'
     amount-must-be-greater-than-zero: '&cAmount must be greater than 0.'
     economy-withdraw-failed: '&cEconomy error: withdraw failed.'
+
+  join-gift:
+    welcome: '&aWelcome to the server, you''ve been gifted &6$%amount%&a! Find your way to the casino!'
+    command:
+      usage: '&eUsage: /minegamesjoin <true|false|set <amount>> | Enabled: %enabled% | Amount: $%amount% | Seen players: %seen%'
+      set-usage: '&eUsage: /minegamesjoin set <amount>'
+      amount-not-number: '&cAmount must be a number.'
+      amount-set: '&aJoin gift amount set to &6$%amount%&a.'
+      enabled: '&aJoin gift enabled.'
+      disabled: '&eJoin gift disabled.'
   
   minegame:
     command:
@@ -104,14 +169,10 @@ messages:
       current-board-hidden: '&eCurrent board.hidden-block = %value%'
       current-board-safe: '&eCurrent board.safe-reveal-block = %value%'
       current-board-mine: '&eCurrent board.mine-reveal-block = %value%'
-      setframe-usage: '&eUsage: /minegameadmin setframe <block> | /minegameadmin setframe
-        all <block> | /minegameadmin setframe reset'
-      sethidden-usage: '&eUsage: /minegameadmin sethidden <block> | /minegameadmin
-        sethidden all <block> | /minegameadmin sethidden reset'
-      setsafe-usage: '&eUsage: /minegameadmin setsafe <block> | /minegameadmin setsafe
-        all <block> | /minegameadmin setsafe reset'
-      setmine-usage: '&eUsage: /minegameadmin setmine <block> | /minegameadmin setmine
-        all <block> | /minegameadmin setmine reset'
+      setframe-usage: '&eUsage: /minegameadmin setframe <block> | /minegameadmin setframe reset'
+      sethidden-usage: '&eUsage: /minegameadmin sethidden <block> | /minegameadmin sethidden reset'
+      setsafe-usage: '&eUsage: /minegameadmin setsafe <block> | /minegameadmin setsafe reset'
+      setmine-usage: '&eUsage: /minegameadmin setmine <block> | /minegameadmin setmine reset'
       casino-frame-mode-usage: '&eUsage: /minegameadmin casinoframe %scope%mode <idle_only|always>'
       casino-frame-usage-lines:
       - '&eUsage:'
@@ -204,8 +265,9 @@ messages:
     command:
       usage: 'Usage: /roulette <red|black|green> <amount>'
       amount-not-number: Amount must be a number.
-      admin-usage: '&eUsage: /rouletteadmin <create|remove|regen|list|set|setframe|setred|setblack|setgreen|setselector|casinoframe|housebalance|housewithdraw|reload>'
-      set-usage: '&eUsage: /rouletteadmin set <path> <value>'
+      admin-usage: '&eUsage: /rouletteadmin <create|remove|regen|list|set [global]|setframe|setred|setblack|setgreen|setselector|casinoframe|housebalance|housewithdraw|reload>'
+      set-usage: '&eUsage: /rouletteadmin set [global] <path> <value>'
+      set-global-usage: '&eUsage: /rouletteadmin set global <path> <value>'
       housewithdraw-usage: '&eUsage: /rouletteadmin housewithdraw <amount|all>'
       board-usage: '&eUsage: /rouletteadmin %command% [all] <BLOCK|reset>'
       unknown-material-command: '&cUnknown material command.'
@@ -283,3 +345,75 @@ messages:
       bets-header: '&7Bets:'
       bets-entry: '&f%player% &7| %color_code%%color% &7| &e%xmult%x &7| &6$%amount%
         &7-> &e$%potential% &7| &a+$%profit%'
+
+  slots:
+    command:
+      admin-usage: '&eUsage: /slotsadmin <create [3-8] [1|2]|remove|regen|list|set [global]|setouterframe|setinnerframe|setwinning|casinoframe|housebalance|housewithdraw|reload>'
+      set-usage: '&eUsage: /slotsadmin set [global] <path> <value>'
+      set-global-usage: '&eUsage: /slotsadmin set global <path> <value>'
+      board-usage: '&eUsage: /slotsadmin %command% [all] <BLOCK|reset>'
+      housewithdraw-usage: '&eUsage: /slotsadmin housewithdraw <amount|all>'
+      unknown-material-command: '&cUnknown material command.'
+      current-config: '&eCurrent %path% = %value%'
+      reel-count-not-number: '&cSlots width must be a number.'
+      rows-not-number: '&cRow count must be a number.'
+      casino-frame-usage-lines:
+      - '&eUsage: /slotsadmin casinoframe [all] <block> <pattern 1-10>'
+      - '&eUsage: /slotsadmin casinoframe [all] mode <idle_only|always>'
+      - '&eUsage: /slotsadmin casinoframe [all] <off|reset>'
+
+    gameplay:
+      not-near: '&cStand near a slots station to use this.'
+      station-busy: '&cThat slots machine is already spinning.'
+      no-money: '&cYou do not have enough money.'
+      spin-charged: '&aSpin started for &6$%amount%&a. Good luck!'
+      win: '&aYou hit &f%wins% &awinning blocks and won &6$%payout% &7(%xmult%x) &7| &a+$%profit%'
+      lose: '&cNo payout this spin. Wager lost: &6$%amount%'
+      result-header: '&e%player%''s result'
+      result-wins: '&7Winning blocks: &b%wins%'
+      result-payout: '&7Payout: &6$%payout% &7(%xmult%x)'
+      result-pattern: '&7Pattern: &f%pattern%'
+
+    admin:
+      created: '&aSlots station created with &f%count% &areels and &f%rows% &arow(s).'
+      removed: '&eSlots station removed.'
+      regenerated: '&aSlots station regenerated.'
+      reloaded: '&aSlots config reloaded.'
+      config-invalid: '&cInvalid slots config value/path.'
+      config-set: '&aSet &f%path% &ato &f%value%&a.'
+      station-list-header: '&6[Slots] &fStations: &e%count%'
+      station-list-entry: '&7- &f%world% &7(%x%, %y%, %z%) &8width %width% &7rows %rows%'
+      board-material-set-all: '&a%label% set to &f%material% &afor all slots stations.'
+      board-material-set-station: '&a%label% set to &f%material%&a for this slots station.'
+      board-material-reset-all: '&aSlots material overrides reset for all stations.'
+      board-material-reset-station: '&aSlots material overrides reset for this station.'
+      house-balance-header: '&6[Slots] &eHouse Balance: &a$%balance% &7| &eEdge: &a%edge%%'
+      house-balance-details: '&7Wagered: &f$%wagered% &7| Paid: &f$%paid%'
+      house-no-balance: '&6[Slots] &cNo house balance available to withdraw.'
+      house-nothing-to-withdraw: '&6[Slots] &cNothing to withdraw.'
+      house-withdraw-success: '&6[Slots] &aWithdrew &6$%amount% &afrom slots house balance.'
+      house-remaining-balance: '&7Remaining slots house balance: &a$%balance%'
+      casino-frame:
+        updated-all: '&aSlots casino frame updated for all stations: &f%block%&a, pattern &f%pattern%&a.'
+        updated-station: '&aSlots casino frame updated: &f%block%&a, pattern &f%pattern%&a.'
+        invalid-mode: '&cMode must be idle_only or always.'
+        mode-set-all: '&aSlots casino frame mode set to &f%mode% &afor all stations.'
+        mode-set-station: '&aSlots casino frame mode set to &f%mode%&a.'
+        disabled-all: '&eSlots casino frame animation disabled for all stations.'
+        disabled-station: '&eSlots casino frame animation disabled.'
+        reset-all: '&aSlots casino frame animation overrides reset for all stations.'
+        reset-station: '&aSlots casino frame animation overrides reset for this station.'
+
+    hologram:
+      idle-lines:
+      - '&6&lSLOTS'
+      - '&7Pull the lever to spin for &6$%price%'
+      - '&7Hit &b%winning_block% &7symbols to win'
+      spinning-lines:
+      - '&6&lSLOTS'
+      - '&eSpinning for %player%...'
+      - '&7Winning block: &b%winning_block%'
+      result-header-lines:
+      - '&6&lSLOTS'
+      result-empty-lines:
+      - '&eRound complete'

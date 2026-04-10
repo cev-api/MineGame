@@ -1,6 +1,8 @@
 # MineGames
 
-MineGames is a Paper `1.21+` casino plugin with two game types:
+![0](https://i.imgur.com/NO1MpCA.png)
+
+MineGames is a Paper `1.21+` casino plugin with three game types:
 
 1. **MineGame**: reveal safe blocks, avoid mines, cash out at your chosen point.
 
@@ -12,7 +14,11 @@ MineGames is a Paper `1.21+` casino plugin with two game types:
 ![3](https://i.imgur.com/0mcRZ5v.png)
 ![4](https://i.imgur.com/1oyUPr8.png)
 
-It uses Vault economy, supports per-station cosmetics, holograms, and casino frame animations.
+3. **Slots**: lever-driven reels with configurable widths, rows, frames, and payouts.
+
+![5](https://i.imgur.com/cj5fCTH.png)
+
+All games use Vault economy, support per-station cosmetics, holograms, and casino frame animations.
 
 ## Requirements
 
@@ -38,6 +44,9 @@ Output jar: `target/minegames-1.x.x.jar`
 5. Create stations:
 1. MineGame station: stand on your station block and run `/minegameadmin create`
 2. Roulette station: stand at board center and run `/rouletteadmin create`
+3. Slots station: stand where you want the machine and run `/slotsadmin create [3-8] [1|2]`
+
+Join gifts are also supported. New players can receive a configurable welcome payout once, with the message and amount controlled in `config.yml` and via `/minegamesjoin`.
 
 ## Gameplay
 
@@ -56,6 +65,14 @@ Output jar: `target/minegames-1.x.x.jar`
 3. Bets close when countdown ends, then spin/result phase resolves.
 4. Payouts apply automatically for winning color bets.
 5. Round resets and repeats continuously.
+
+### Slots
+
+1. Stand near a Slots station.
+2. Pull the lever to spin and pay the configured wager.
+3. Reels animate for a few seconds and then stop from left to right.
+4. Matching the winning block pays out based on how many appear or which payline lands.
+5. The station can be customized with outer frame, inner frame, winning block, row count, and lever-side frame animation.
 
 ## Commands
 
@@ -85,8 +102,8 @@ Primary command: `/minegameadmin` (legacy alias: `/mineadmin`)
 1. `/minegameadmin holo <on|off>`
 2. `/minegameadmin debug <on|off>`
 - Global config:
-1. `/minegameadmin set <path> <value>`
-2. `/minegameadmin set <path>` (shows current value)
+1. `/minegameadmin set [global] <path> <value>`
+2. `/minegameadmin set [global] <path>` (shows current value)
 - Per-station cosmetics (or all stations):
 1. `/minegameadmin setframe [all] <BLOCK|reset>`
 2. `/minegameadmin sethidden [all] <BLOCK|reset>`
@@ -109,18 +126,54 @@ Primary command: `/minegameadmin` (legacy alias: `/mineadmin`)
 1. `/rouletteadmin housebalance`
 2. `/rouletteadmin housewithdraw <amount|all>`
 - Global config:
-1. `/rouletteadmin set <path> <value>`
-2. `/rouletteadmin set <path>` (shows current value)
+1. `/rouletteadmin set [global] <path> <value>`
+2. `/rouletteadmin set [global] <path>` (shows current value)
+3. `/rouletteadmin set global <path> <value>` forces a global change even when standing near a station
 - Per-station board cosmetics (or all stations):
 1. `/rouletteadmin setframe [all] <BLOCK|reset>`
 2. `/rouletteadmin setred [all] <BLOCK|reset>`
 3. `/rouletteadmin setblack [all] <BLOCK|reset>`
 4. `/rouletteadmin setgreen [all] <BLOCK|reset>`
 5. `/rouletteadmin setselector [all] <BLOCK|reset>`
+- Per-station board size:
+1. `/rouletteadmin set board-size <value>` while standing near a station changes that station only
 - Per-station casino frame (or all stations):
 1. `/rouletteadmin casinoframe [all] <BLOCK> <pattern 1-10>`
 2. `/rouletteadmin casinoframe [all] mode <always|betting_only>`
 3. `/rouletteadmin casinoframe [all] <off|reset>`
+
+### Slots Admin (`slots.admin`)
+
+- Station lifecycle:
+1. `/slotsadmin create [3-8] [1|2]`
+2. `/slotsadmin remove`
+3. `/slotsadmin regen`
+4. `/slotsadmin list`
+5. `/slotsadmin reload`
+- House accounting:
+1. `/slotsadmin housebalance`
+2. `/slotsadmin housewithdraw <amount|all>`
+- Global config:
+1. `/slotsadmin set [global] <path> <value>`
+2. `/slotsadmin set [global] <path>` (shows current value)
+3. `/slotsadmin set global <path> <value>` forces a global change even when standing near a station
+- Per-station cosmetics (or all stations):
+1. `/slotsadmin setouterframe [all] <BLOCK|reset>`
+2. `/slotsadmin setinnerframe [all] <BLOCK|reset>`
+3. `/slotsadmin setwinning [all] <BLOCK|reset>`
+- Per-station price:
+1. `/slotsadmin set cost-per-spin <value>` while standing near a station changes that station only
+- Per-station casino frame (or all stations):
+1. `/slotsadmin casinoframe [all] <BLOCK> <pattern 1-10>`
+2. `/slotsadmin casinoframe [all] mode <idle_only|always>`
+3. `/slotsadmin casinoframe [all] <off|reset>`
+
+### Join Gift
+
+- `/minegamesjoin true|false` enables or disables the first-join gift.
+- `/minegamesjoin set <amount>` changes the welcome payout.
+- Seen players are stored in `join_rewards.yml`, so each player only receives the gift once.
+- The welcome message is editable under `messages.join-gift.welcome` in `config.yml`.
 
 ## Permissions
 
@@ -169,15 +222,16 @@ Primary command: `/minegameadmin` (legacy alias: `/mineadmin`)
 
 ## Notes
 
-- `set ...` commands edit global defaults.
+- `set ...` commands edit the nearest station when the setting is station-local, unless you use `set global ...` to force a global default.
 - `setframe/setred/...` and `casinoframe` commands edit station overrides.
 - Adding `all` applies cosmetic override commands to every station of that game type.
+- Mines, roulette, and slots rebaseline their saved footprints when a size change would otherwise leave old blocks behind.
 - `housebalance`/`housewithdraw` are admin-only (`mine.admin` / `roulette.admin`).
 - `housewithdraw` pays the withdrawn amount directly to the admin executing the command.
 - MineGame board height is controlled by `board.frame-one-higher` (settable via `/minegameadmin set board.frame-one-higher <true|false>`).
 - Roulette color defaults are percent-based (`48.61 / 48.61 / 2.78`) and auto-scale with board size.
 - Changing Roulette selector block clears old selector blocks from the selector layer before placing new ones.
-- Removing MineGame/Roulette stations restores original world blocks for stations created on current versions (snapshot-based restore).
+- Removing MineGame/Roulette/Slots stations restores original world blocks for stations created on current versions (snapshot-based restore).
 - Roulette station creation anchors the board directly under the admin's feet (replaces floor blocks there).
 - Holograms are configured with no-wrap text display behavior for more consistent spacing.
 

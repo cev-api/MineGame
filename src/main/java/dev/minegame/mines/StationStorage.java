@@ -62,6 +62,14 @@ public final class StationStorage {
             String frameAnimMode = item.containsKey("frameAnimMode")
                     ? String.valueOf(item.get("frameAnimMode"))
                     : null;
+            Integer boardSize = null;
+            if (item.containsKey("boardSize")) {
+                try {
+                    boardSize = Integer.parseInt(String.valueOf(item.get("boardSize")));
+                } catch (NumberFormatException ignored) {
+                    boardSize = null;
+                }
+            }
             StationData station = new StationData(
                     world,
                     x,
@@ -75,7 +83,8 @@ public final class StationStorage {
                     frameAnimEnabled,
                     frameAnimBlock,
                     frameAnimPattern,
-                    frameAnimMode
+                    frameAnimMode,
+                    boardSize
             );
             stations.put(station.key(), station);
         }
@@ -114,6 +123,9 @@ public final class StationStorage {
             }
             if (station.frameAnimMode() != null) {
                 map.put("frameAnimMode", station.frameAnimMode());
+            }
+            if (station.boardSize() != null) {
+                map.put("boardSize", station.boardSize());
             }
             raw.add(map);
         }

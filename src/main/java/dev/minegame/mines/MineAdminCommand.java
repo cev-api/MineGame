@@ -52,7 +52,7 @@ public final class MineAdminCommand implements CommandExecutor {
                     ).replace("%value%", String.valueOf(minesManager.getCurrentConfigValue("board.frame-block")))));
                     player.sendMessage(minesManager.colorize(minesManager.text(
                             "messages.minegame.command.setframe-usage",
-                            "&eUsage: /minegameadmin setframe <block> | /minegameadmin setframe all <block> | /minegameadmin setframe reset"
+                            "&eUsage: /minegameadmin setframe <block> | /minegameadmin setframe reset"
                     )));
                 } else {
                     handleBoardMaterialCommand(player, args, "setframe");
@@ -66,7 +66,7 @@ public final class MineAdminCommand implements CommandExecutor {
                     ).replace("%value%", String.valueOf(minesManager.getCurrentConfigValue("board.hidden-block")))));
                     player.sendMessage(minesManager.colorize(minesManager.text(
                             "messages.minegame.command.sethidden-usage",
-                            "&eUsage: /minegameadmin sethidden <block> | /minegameadmin sethidden all <block> | /minegameadmin sethidden reset"
+                            "&eUsage: /minegameadmin sethidden <block> | /minegameadmin sethidden reset"
                     )));
                 } else {
                     handleBoardMaterialCommand(player, args, "sethidden");
@@ -80,7 +80,7 @@ public final class MineAdminCommand implements CommandExecutor {
                     ).replace("%value%", String.valueOf(minesManager.getCurrentConfigValue("board.safe-reveal-block")))));
                     player.sendMessage(minesManager.colorize(minesManager.text(
                             "messages.minegame.command.setsafe-usage",
-                            "&eUsage: /minegameadmin setsafe <block> | /minegameadmin setsafe all <block> | /minegameadmin setsafe reset"
+                            "&eUsage: /minegameadmin setsafe <block> | /minegameadmin setsafe reset"
                     )));
                 } else {
                     handleBoardMaterialCommand(player, args, "setsafe");
@@ -94,14 +94,35 @@ public final class MineAdminCommand implements CommandExecutor {
                     ).replace("%value%", String.valueOf(minesManager.getCurrentConfigValue("board.mine-reveal-block")))));
                     player.sendMessage(minesManager.colorize(minesManager.text(
                             "messages.minegame.command.setmine-usage",
-                            "&eUsage: /minegameadmin setmine <block> | /minegameadmin setmine all <block> | /minegameadmin setmine reset"
+                            "&eUsage: /minegameadmin setmine <block> | /minegameadmin setmine reset"
                     )));
                 } else {
                     handleBoardMaterialCommand(player, args, "setmine");
                 }
             }
             case "set" -> {
-                if (args.length == 2) {
+                if (args.length >= 2 && args[1].equalsIgnoreCase("global")) {
+                    if (args.length == 3) {
+                        Object current = minesManager.getCurrentConfigValue(args[2]);
+                        player.sendMessage(minesManager.colorize(minesManager.text(
+                                "messages.minegame.command.current-config",
+                                "&eCurrent %path% = %value%"
+                        ).replace("%path%", args[2]).replace("%value%", String.valueOf(current))));
+                        player.sendMessage(minesManager.colorize(minesManager.text(
+                                "messages.minegame.command.set-global-usage",
+                                "&eUsage: /minegameadmin set global <path> <value>"
+                        )));
+                        return true;
+                    }
+                    if (args.length < 4) {
+                        player.sendMessage(minesManager.colorize(minesManager.text(
+                                "messages.minegame.command.set-global-usage",
+                                "&eUsage: /minegameadmin set global <path> <value>"
+                        )));
+                        return true;
+                    }
+                    minesManager.setConfigValue(player, args[2], args[3], true);
+                } else if (args.length == 2) {
                     Object current = minesManager.getCurrentConfigValue(args[1]);
                     player.sendMessage(minesManager.colorize(minesManager.text(
                             "messages.minegame.command.current-config",
@@ -109,12 +130,12 @@ public final class MineAdminCommand implements CommandExecutor {
                     ).replace("%path%", args[1]).replace("%value%", String.valueOf(current))));
                     player.sendMessage(minesManager.colorize(minesManager.text(
                             "messages.minegame.command.set-usage",
-                            "&eUsage: /minegameadmin set <path> <value>"
+                            "&eUsage: /minegameadmin set [global] <path> <value>"
                     )));
                 } else if (args.length < 3) {
                     player.sendMessage(minesManager.colorize(minesManager.text(
                             "messages.minegame.command.set-usage",
-                            "&eUsage: /minegameadmin set <path> <value>"
+                            "&eUsage: /minegameadmin set [global] <path> <value>"
                     )));
                 } else {
                     minesManager.setConfigValue(player, args[1], args[2]);
@@ -186,22 +207,22 @@ public final class MineAdminCommand implements CommandExecutor {
             minesManager.resetBoardMaterialOverrides(player, false);
             return;
         }
-        if (args.length >= 2 && args[1].equalsIgnoreCase("all")) {
+        String materialName = args[1];
+        if (materialName.equalsIgnoreCase("all")) {
             if (args.length >= 3 && args[2].equalsIgnoreCase("reset")) {
-                minesManager.resetBoardMaterialOverrides(player, true);
+                minesManager.resetBoardMaterialOverrides(player, false);
                 return;
             }
             if (args.length < 3) {
                 player.sendMessage(minesManager.colorize(minesManager.text(
                         "messages.minegame.command.board-all-usage",
-                        "&eUsage: /minegameadmin %type% all <block>"
+                        "&eUsage: /minegameadmin %type% <block>"
                 ).replace("%type%", type)));
                 return;
             }
-            applyBoardMaterial(player, type, args[2], true);
-            return;
+            materialName = args[2];
         }
-        applyBoardMaterial(player, type, args[1], false);
+        applyBoardMaterial(player, type, materialName, false);
     }
 
     private void applyBoardMaterial(Player player, String type, String materialName, boolean applyAll) {

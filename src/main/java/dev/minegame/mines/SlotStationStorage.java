@@ -7,16 +7,17 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-public final class RouletteStationStorage {
+public final class SlotStationStorage {
     private final MinegamePlugin plugin;
-    private final Map<String, RouletteStationData> stations = new LinkedHashMap<>();
+    private final Map<String, SlotStationData> stations = new LinkedHashMap<>();
     private final File file;
 
-    public RouletteStationStorage(MinegamePlugin plugin) {
+    public SlotStationStorage(MinegamePlugin plugin) {
         this.plugin = plugin;
-        this.file = new File(plugin.getDataFolder(), "roulette_stations.yml");
+        this.file = new File(plugin.getDataFolder(), "slot_stations.yml");
     }
 
     public void load() {
@@ -31,27 +32,16 @@ public final class RouletteStationStorage {
             int x = Integer.parseInt(String.valueOf(item.get("x")));
             int y = Integer.parseInt(String.valueOf(item.get("y")));
             int z = Integer.parseInt(String.valueOf(item.get("z")));
-            String boardFrameBlock = item.containsKey("boardFrameBlock")
-                    ? String.valueOf(item.get("boardFrameBlock"))
-                    : null;
-            String boardRedBlock = item.containsKey("boardRedBlock")
-                    ? String.valueOf(item.get("boardRedBlock"))
-                    : null;
-            String boardBlackBlock = item.containsKey("boardBlackBlock")
-                    ? String.valueOf(item.get("boardBlackBlock"))
-                    : null;
-            String boardGreenBlock = item.containsKey("boardGreenBlock")
-                    ? String.valueOf(item.get("boardGreenBlock"))
-                    : null;
-            String boardSelectorBlock = item.containsKey("boardSelectorBlock")
-                    ? String.valueOf(item.get("boardSelectorBlock"))
-                    : null;
+            BlockFace facing = BlockFace.valueOf(String.valueOf(item.containsKey("facing") ? item.get("facing") : "NORTH"));
+            int reelCount = Integer.parseInt(String.valueOf(item.containsKey("reelCount") ? item.get("reelCount") : 3));
+            int rowCount = Integer.parseInt(String.valueOf(item.containsKey("rowCount") ? item.get("rowCount") : 1));
+            String outerFrameBlock = item.containsKey("outerFrameBlock") ? String.valueOf(item.get("outerFrameBlock")) : null;
+            String innerFrameBlock = item.containsKey("innerFrameBlock") ? String.valueOf(item.get("innerFrameBlock")) : null;
+            String winningBlock = item.containsKey("winningBlock") ? String.valueOf(item.get("winningBlock")) : null;
             Boolean frameAnimEnabled = item.containsKey("frameAnimEnabled")
                     ? Boolean.parseBoolean(String.valueOf(item.get("frameAnimEnabled")))
                     : null;
-            String frameAnimBlock = item.containsKey("frameAnimBlock")
-                    ? String.valueOf(item.get("frameAnimBlock"))
-                    : null;
+            String frameAnimBlock = item.containsKey("frameAnimBlock") ? String.valueOf(item.get("frameAnimBlock")) : null;
             Integer frameAnimPattern = null;
             if (item.containsKey("frameAnimPattern")) {
                 try {
@@ -60,9 +50,7 @@ public final class RouletteStationStorage {
                     frameAnimPattern = null;
                 }
             }
-            String frameAnimMode = item.containsKey("frameAnimMode")
-                    ? String.valueOf(item.get("frameAnimMode"))
-                    : null;
+            String frameAnimMode = item.containsKey("frameAnimMode") ? String.valueOf(item.get("frameAnimMode")) : null;
             Integer boardSize = null;
             if (item.containsKey("boardSize")) {
                 try {
@@ -71,21 +59,31 @@ public final class RouletteStationStorage {
                     boardSize = null;
                 }
             }
-            RouletteStationData station = new RouletteStationData(
+            Double costPerSpin = null;
+            if (item.containsKey("costPerSpin")) {
+                try {
+                    costPerSpin = Double.parseDouble(String.valueOf(item.get("costPerSpin")));
+                } catch (NumberFormatException ignored) {
+                    costPerSpin = null;
+                }
+            }
+            SlotStationData station = new SlotStationData(
                     world,
                     x,
                     y,
                     z,
-                    boardFrameBlock,
-                    boardRedBlock,
-                    boardBlackBlock,
-                    boardGreenBlock,
-                    boardSelectorBlock,
+                    facing,
+                    reelCount,
+                    rowCount,
+                    outerFrameBlock,
+                    innerFrameBlock,
+                    winningBlock,
                     frameAnimEnabled,
                     frameAnimBlock,
                     frameAnimPattern,
                     frameAnimMode,
-                    boardSize
+                    boardSize,
+                    costPerSpin
             );
             stations.put(station.key(), station);
         }
@@ -94,26 +92,23 @@ public final class RouletteStationStorage {
     public void save() {
         YamlConfiguration yaml = new YamlConfiguration();
         List<Map<String, Object>> raw = new ArrayList<>();
-        for (RouletteStationData station : stations.values()) {
+        for (SlotStationData station : stations.values()) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("world", station.worldName());
             map.put("x", station.x());
             map.put("y", station.y());
             map.put("z", station.z());
-            if (station.boardFrameBlock() != null) {
-                map.put("boardFrameBlock", station.boardFrameBlock());
+            map.put("facing", station.facing().name());
+            map.put("reelCount", station.reelCount());
+            map.put("rowCount", station.rowCount());
+            if (station.outerFrameBlock() != null) {
+                map.put("outerFrameBlock", station.outerFrameBlock());
             }
-            if (station.boardRedBlock() != null) {
-                map.put("boardRedBlock", station.boardRedBlock());
+            if (station.innerFrameBlock() != null) {
+                map.put("innerFrameBlock", station.innerFrameBlock());
             }
-            if (station.boardBlackBlock() != null) {
-                map.put("boardBlackBlock", station.boardBlackBlock());
-            }
-            if (station.boardGreenBlock() != null) {
-                map.put("boardGreenBlock", station.boardGreenBlock());
-            }
-            if (station.boardSelectorBlock() != null) {
-                map.put("boardSelectorBlock", station.boardSelectorBlock());
+            if (station.winningBlock() != null) {
+                map.put("winningBlock", station.winningBlock());
             }
             if (station.frameAnimEnabled() != null) {
                 map.put("frameAnimEnabled", station.frameAnimEnabled());
@@ -130,29 +125,32 @@ public final class RouletteStationStorage {
             if (station.boardSize() != null) {
                 map.put("boardSize", station.boardSize());
             }
+            if (station.costPerSpin() != null) {
+                map.put("costPerSpin", station.costPerSpin());
+            }
             raw.add(map);
         }
         yaml.set("stations", raw);
         try {
             yaml.save(file);
         } catch (IOException e) {
-            plugin.getLogger().severe("Failed to save roulette_stations.yml: " + e.getMessage());
+            plugin.getLogger().severe("Failed to save slot_stations.yml: " + e.getMessage());
         }
     }
 
-    public Collection<RouletteStationData> all() {
+    public Collection<SlotStationData> all() {
         return stations.values();
     }
 
-    public RouletteStationData get(String key) {
-        return stations.get(key);
-    }
-
-    public void upsert(RouletteStationData station) {
+    public void upsert(SlotStationData station) {
         stations.put(station.key(), station);
     }
 
-    public RouletteStationData remove(String key) {
+    public SlotStationData get(String key) {
+        return stations.get(key);
+    }
+
+    public SlotStationData remove(String key) {
         return stations.remove(key);
     }
 }

@@ -402,6 +402,10 @@ public final class MinesManager {
     }
 
     public void setConfigValue(Player player, String pathInput, String valueInput) {
+        setConfigValue(player, pathInput, valueInput, false);
+    }
+
+    public void setConfigValue(Player player, String pathInput, String valueInput, boolean forceGlobal) {
         String path = normalizeConfigPath(pathInput);
         Object parsed = parseConfigValue(path, valueInput);
         if (parsed == null) {
@@ -410,6 +414,23 @@ public final class MinesManager {
             } else {
                 msg(player, "messages.minegame.admin.config-invalid-path");
             }
+            return;
+        }
+
+        if (!forceGlobal && isStationConfigPath(path)) {
+            StationData station = stationFromPlayerBeacon(player);
+            if (station != null) {
+                StationData updated = applyStationConfigValue(station, path, parsed);
+                if (updated != null) {
+                    saveStation(updated, true);
+                    player.sendMessage(color(replaceVars("messages.minegame.admin.config-set", Map.of(
+                            "%path%", path,
+                            "%value%", String.valueOf(parsed)
+                    ))));
+                    return;
+                }
+            }
+            msg(player, "messages.minegame.gameplay.not-on-beacon");
             return;
         }
 
@@ -447,6 +468,11 @@ public final class MinesManager {
     }
 
     public void saveStation(StationData station, boolean regenerateBoard) {
+        StationData previous = stationStorage.get(station.key());
+        boolean resized = previous != null && !java.util.Objects.equals(previous.boardSize(), station.boardSize());
+        if (resized) {
+            rebaselineStation(station);
+        }
         stationStorage.upsert(station);
         stationStorage.save();
         if (regenerateBoard) {
@@ -456,6 +482,10 @@ public final class MinesManager {
 
     public void saveAllStations(List<StationData> stations, boolean regenerateBoards) {
         for (StationData station : stations) {
+            StationData previous = stationStorage.get(station.key());
+            if (previous != null && !java.util.Objects.equals(previous.boardSize(), station.boardSize())) {
+                rebaselineStation(station);
+            }
             stationStorage.upsert(station);
         }
         stationStorage.save();
@@ -815,6 +845,13 @@ public final class MinesManager {
         restoreStorage.captureIfAbsent(station.key(), affected);
     }
 
+    private void rebaselineStation(StationData station) {
+        if (restoreStorage.has(station.key())) {
+            restoreStorage.restoreAndForget(station.key());
+        }
+        captureStationBlocksIfNeeded(station);
+    }
+
     private void launchWinCelebration(StationData station) {
         BoardGeometry geometry = geometry(station);
         List<Location> launches = geometry.frontCelebrationLocations();
@@ -906,7 +943,11 @@ public final class MinesManager {
     }
 
     private BoardGeometry geometry(StationData station) {
-        return new BoardGeometry(station, wallDistance, gridSize, frameVerticalOffset);
+        return new BoardGeometry(station, wallDistance, boardSizeFor(station), frameVerticalOffset);
+    }
+
+    private int boardSizeFor(StationData station) {
+        return station.boardSize() != null ? station.boardSize() : gridSize;
     }
 
     private boolean isAllowedConfigPath(String path) {
@@ -939,6 +980,20 @@ public final class MinesManager {
                  "minegame.hologram.behind-beacon-distance",
                  "minegame.hologram.base-height" -> true;
             default -> false;
+        };
+    }
+
+    private boolean isStationConfigPath(String path) {
+        return switch (path) {
+            case "minegame.board.grid-size" -> true;
+            default -> false;
+        };
+    }
+
+    private StationData applyStationConfigValue(StationData station, String path, Object parsed) {
+        return switch (path) {
+            case "minegame.board.grid-size" -> station.withBoardSize((Integer) parsed);
+            default -> null;
         };
     }
 

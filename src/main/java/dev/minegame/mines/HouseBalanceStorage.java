@@ -16,6 +16,10 @@ public final class HouseBalanceStorage {
     private double rouletteTotalWagered;
     private double rouletteTotalPayout;
 
+    private double slotsBalance;
+    private double slotsTotalWagered;
+    private double slotsTotalPayout;
+
     public HouseBalanceStorage(MinegamePlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "house_balances.yml");
@@ -33,6 +37,10 @@ public final class HouseBalanceStorage {
         this.rouletteBalance = yaml.getDouble("roulette.balance", 0.0);
         this.rouletteTotalWagered = yaml.getDouble("roulette.total-wagered", 0.0);
         this.rouletteTotalPayout = yaml.getDouble("roulette.total-payout", 0.0);
+
+        this.slotsBalance = yaml.getDouble("slots.balance", 0.0);
+        this.slotsTotalWagered = yaml.getDouble("slots.total-wagered", 0.0);
+        this.slotsTotalPayout = yaml.getDouble("slots.total-payout", 0.0);
     }
 
     public void save() {
@@ -43,6 +51,9 @@ public final class HouseBalanceStorage {
         yaml.set("roulette.balance", rouletteBalance);
         yaml.set("roulette.total-wagered", rouletteTotalWagered);
         yaml.set("roulette.total-payout", rouletteTotalPayout);
+        yaml.set("slots.balance", slotsBalance);
+        yaml.set("slots.total-wagered", slotsTotalWagered);
+        yaml.set("slots.total-payout", slotsTotalPayout);
         try {
             yaml.save(file);
         } catch (IOException ex) {
@@ -65,6 +76,15 @@ public final class HouseBalanceStorage {
         rouletteBalance += cleanWager - cleanPayout;
         rouletteTotalWagered += cleanWager;
         rouletteTotalPayout += cleanPayout;
+        save();
+    }
+
+    public void recordSlotsResult(double wager, double payout) {
+        double cleanWager = Math.max(0.0, wager);
+        double cleanPayout = Math.max(0.0, payout);
+        slotsBalance += cleanWager - cleanPayout;
+        slotsTotalWagered += cleanWager;
+        slotsTotalPayout += cleanPayout;
         save();
     }
 
@@ -98,6 +118,21 @@ public final class HouseBalanceStorage {
         save();
     }
 
+    public double withdrawSlots(double amount) {
+        double allowed = Math.max(0.0, Math.min(amount, slotsBalance));
+        slotsBalance -= allowed;
+        save();
+        return allowed;
+    }
+
+    public void refundSlotsWithdrawal(double amount) {
+        if (amount <= 0.0) {
+            return;
+        }
+        slotsBalance += amount;
+        save();
+    }
+
     public double minesBalance() {
         return minesBalance;
     }
@@ -120,5 +155,17 @@ public final class HouseBalanceStorage {
 
     public double rouletteTotalPayout() {
         return rouletteTotalPayout;
+    }
+
+    public double slotsBalance() {
+        return slotsBalance;
+    }
+
+    public double slotsTotalWagered() {
+        return slotsTotalWagered;
+    }
+
+    public double slotsTotalPayout() {
+        return slotsTotalPayout;
     }
 }

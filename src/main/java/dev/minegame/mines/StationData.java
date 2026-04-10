@@ -18,7 +18,8 @@ public record StationData(
         Boolean frameAnimEnabled,
         String frameAnimBlock,
         Integer frameAnimPattern,
-        String frameAnimMode
+        String frameAnimMode,
+        Integer boardSize
 ) {
     public StationData {
         if (boardHiddenBlock != null) {
@@ -39,10 +40,13 @@ public record StationData(
         if (frameAnimMode != null) {
             frameAnimMode = frameAnimMode.toLowerCase();
         }
+        if (boardSize != null) {
+            boardSize = Math.max(2, boardSize);
+        }
     }
 
     public StationData(String worldName, int x, int y, int z, BlockFace facing) {
-        this(worldName, x, y, z, facing, null, null, null, null, null, null, null, null);
+        this(worldName, x, y, z, facing, null, null, null, null, null, null, null, null, null);
     }
 
     public String key() {
@@ -71,7 +75,8 @@ public record StationData(
                 enabled,
                 block,
                 pattern,
-                mode
+                mode,
+                boardSize
         );
     }
 
@@ -89,7 +94,8 @@ public record StationData(
                 null,
                 null,
                 null,
-                null
+                null,
+                boardSize
         );
     }
 
@@ -107,7 +113,8 @@ public record StationData(
                 frameAnimEnabled,
                 frameAnimBlock,
                 frameAnimPattern,
-                frameAnimMode
+                frameAnimMode,
+                boardSize
         );
     }
 
@@ -125,7 +132,31 @@ public record StationData(
                 frameAnimEnabled,
                 frameAnimBlock,
                 frameAnimPattern,
-                frameAnimMode
+                frameAnimMode,
+                boardSize
         );
+    }
+
+    public StationData withBoardSize(Integer size) {
+        return new StationData(
+                worldName,
+                x,
+                y,
+                z,
+                facing,
+                boardHiddenBlock,
+                boardSafeRevealBlock,
+                boardMineRevealBlock,
+                boardFrameBlock,
+                frameAnimEnabled,
+                frameAnimBlock,
+                frameAnimPattern,
+                frameAnimMode,
+                size
+        );
+    }
+
+    public StationData clearBoardSizeOverride() {
+        return withBoardSize(null);
     }
 }

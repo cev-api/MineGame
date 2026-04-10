@@ -190,10 +190,30 @@ public final class RouletteManager {
     }
 
     public void setConfigValue(Player player, String pathInput, String valueInput) {
+        setConfigValue(player, pathInput, valueInput, false);
+    }
+
+    public void setConfigValue(Player player, String pathInput, String valueInput, boolean forceGlobal) {
         String path = normalizeConfigPath(pathInput);
         Object parsed = parseConfigValue(path, valueInput);
         if (parsed == null) {
             player.sendMessage(color(text("messages.roulette.admin.config-invalid", "&cInvalid roulette config value/path.")));
+            return;
+        }
+        if (!forceGlobal && isStationConfigPath(path)) {
+            StationRuntime runtime = runtimeForPlayer(player);
+            if (runtime != null) {
+                RouletteStationData updated = applyStationConfigValue(runtime.station, path, parsed);
+                if (updated != null) {
+                    saveStation(updated, true);
+                    player.sendMessage(color(replace(text("messages.roulette.admin.config-set", "&aSet &f%path% &ato &f%value%&a."), Map.of(
+                            "%path%", path,
+                            "%value%", String.valueOf(parsed)
+                    ))));
+                    return;
+                }
+            }
+            player.sendMessage(color(text("messages.roulette.gameplay.not-near", "&cYou are not near a roulette station.")));
             return;
         }
         plugin.getConfig().set(path, parsed);
@@ -208,11 +228,47 @@ public final class RouletteManager {
         ))));
     }
 
+    private boolean isStationConfigPath(String path) {
+        return switch (path) {
+            case "roulette.board-size",
+                    "roulette.blocks.frame",
+                    "roulette.blocks.red",
+                    "roulette.blocks.black",
+                    "roulette.blocks.green",
+                    "roulette.blocks.selector",
+                    "roulette.frame-animation.enabled",
+                    "roulette.frame-animation.block",
+                    "roulette.frame-animation.pattern",
+                    "roulette.frame-animation.mode" -> true;
+            default -> false;
+        };
+    }
+
+    private RouletteStationData applyStationConfigValue(RouletteStationData station, String path, Object parsed) {
+        return switch (path) {
+            case "roulette.blocks.frame" -> station.withBoardMaterials(String.valueOf(parsed), station.boardRedBlock(), station.boardBlackBlock(), station.boardGreenBlock(), station.boardSelectorBlock());
+            case "roulette.blocks.red" -> station.withBoardMaterials(station.boardFrameBlock(), String.valueOf(parsed), station.boardBlackBlock(), station.boardGreenBlock(), station.boardSelectorBlock());
+            case "roulette.blocks.black" -> station.withBoardMaterials(station.boardFrameBlock(), station.boardRedBlock(), String.valueOf(parsed), station.boardGreenBlock(), station.boardSelectorBlock());
+            case "roulette.blocks.green" -> station.withBoardMaterials(station.boardFrameBlock(), station.boardRedBlock(), station.boardBlackBlock(), String.valueOf(parsed), station.boardSelectorBlock());
+            case "roulette.blocks.selector" -> station.withBoardMaterials(station.boardFrameBlock(), station.boardRedBlock(), station.boardBlackBlock(), station.boardGreenBlock(), String.valueOf(parsed));
+            case "roulette.frame-animation.enabled" -> station.withFrameAnimation((Boolean) parsed, null, null, null);
+            case "roulette.frame-animation.block" -> station.withFrameAnimation(null, String.valueOf(parsed), null, null);
+            case "roulette.frame-animation.pattern" -> station.withFrameAnimation(null, null, (Integer) parsed, null);
+            case "roulette.frame-animation.mode" -> station.withFrameAnimation(null, null, null, String.valueOf(parsed));
+            case "roulette.board-size" -> station.withBoardSize((Integer) parsed);
+            default -> null;
+        };
+    }
+
     public Object getCurrentConfigValue(String path) {
         return plugin.getConfig().get(normalizeConfigPath(path));
     }
 
     public void saveStation(RouletteStationData station, boolean regenerateBoard) {
+        RouletteStationData previous = stationStorage.get(station.key());
+        if (previous != null && !java.util.Objects.equals(previous.boardSize(), station.boardSize())) {
+            rebaselineStation(station);
+        }
         stationStorage.upsert(station);
         stationStorage.save();
         StationRuntime runtime = runtimes.get(station.key());
@@ -232,6 +288,10 @@ public final class RouletteManager {
 
     public void saveAllStations(List<RouletteStationData> stations, boolean regenerateBoards) {
         for (RouletteStationData station : stations) {
+            RouletteStationData previous = stationStorage.get(station.key());
+            if (previous != null && !java.util.Objects.equals(previous.boardSize(), station.boardSize())) {
+                rebaselineStation(station);
+            }
             stationStorage.upsert(station);
         }
         stationStorage.save();
@@ -250,6 +310,15 @@ public final class RouletteManager {
                 }
             }
         }
+    }
+
+    private void rebaselineStation(RouletteStationData station) {
+        if (restoreStorage.has(station.key())) {
+            restoreStorage.restoreAndForget(station.key());
+        } else {
+            removeBoard(new StationRuntime(station));
+        }
+        captureStationBlocksIfNeeded(station);
     }
 
     public Collection<RouletteStationData> stations() {
@@ -541,7 +610,7 @@ public final class RouletteManager {
         for (StationRuntime runtime : runtimes.values()) {
             RouletteBoardGeometry g;
             try {
-                g = runtime.geometry(boardSize);
+                g = runtime.geometry(boardSizeFor(runtime.station));
             } catch (IllegalStateException ignored) {
                 continue;
             }
@@ -781,7 +850,7 @@ public final class RouletteManager {
     }
 
     private void applyWinWipe(StationRuntime runtime, RouletteColor win) {
-        RouletteBoardGeometry g = runtime.geometry(boardSize);
+        RouletteBoardGeometry g = runtime.geometry(boardSizeFor(runtime.station));
         int max = boardSize;
         for (int r = 0; r <= max; r++) {
             int radius = r;
@@ -839,7 +908,7 @@ public final class RouletteManager {
     }
 
     private void clearSelectorLayer(StationRuntime runtime) {
-        RouletteBoardGeometry g = runtime.geometry(boardSize);
+        RouletteBoardGeometry g = runtime.geometry(boardSizeFor(runtime.station));
         for (Block block : g.boardBlocks()) {
             Block above = block.getWorld().getBlockAt(block.getLocation().add(0, 1, 0));
             if (above.getType() != Material.AIR) {
@@ -923,7 +992,7 @@ public final class RouletteManager {
     }
 
     private void renderBoard(StationRuntime runtime) {
-        RouletteBoardGeometry g = runtime.geometry(boardSize);
+        RouletteBoardGeometry g = runtime.geometry(boardSizeFor(runtime.station));
         Material stationFrameBlock = visualFrameBlock(runtime.station);
         for (Block frame : g.frameBlocks()) {
             frame.setType(stationFrameBlock, false);
@@ -937,7 +1006,7 @@ public final class RouletteManager {
     }
 
     private void removeBoard(StationRuntime runtime) {
-        RouletteBoardGeometry g = runtime.geometry(boardSize);
+        RouletteBoardGeometry g = runtime.geometry(boardSizeFor(runtime.station));
         for (Block block : g.boardBlocks()) {
             block.setType(Material.AIR, false);
             Block above = block.getWorld().getBlockAt(block.getLocation().add(0, 1, 0));
@@ -951,7 +1020,7 @@ public final class RouletteManager {
     }
 
     private Block selectorBlockFor(StationRuntime runtime, int index) {
-        RouletteBoardGeometry g = runtime.geometry(boardSize);
+        RouletteBoardGeometry g = runtime.geometry(boardSizeFor(runtime.station));
         int row = index / boardSize;
         int col = index % boardSize;
         Block base = g.cellBlock(col, row);
@@ -959,7 +1028,7 @@ public final class RouletteManager {
     }
 
     private void updateHologram(StationRuntime runtime) {
-        Location anchor = runtime.geometry(boardSize).centerAbove(plugin.getConfig().getDouble("roulette.hologram-height", 3.5));
+        Location anchor = runtime.geometry(boardSizeFor(runtime.station)).centerAbove(plugin.getConfig().getDouble("roulette.hologram-height", 3.5));
         double viewRange = plugin.getConfig().getDouble("roulette.hologram-view-range", 8.0D);
         if (!hasNearbyHologramViewer(anchor, viewRange)) {
             deleteHologram(runtime.station.key());
@@ -1100,7 +1169,7 @@ public final class RouletteManager {
     private boolean hasNearbyPlayers(StationRuntime runtime) {
         RouletteBoardGeometry geometry;
         try {
-            geometry = runtime.geometry(boardSize);
+            geometry = runtime.geometry(boardSizeFor(runtime.station));
         } catch (IllegalStateException ignored) {
             return false;
         }
@@ -1234,8 +1303,8 @@ public final class RouletteManager {
         }
         double maxDistance = plugin.getConfig().getDouble("roulette.max-bet-distance", 18.0);
         return runtimes.values().stream()
-                .min(Comparator.comparingDouble(rt -> rt.geometry(boardSize).centerAbove(0).distanceSquared(player.getLocation())))
-                .filter(rt -> rt.geometry(boardSize).centerAbove(0).distance(player.getLocation()) <= maxDistance)
+                .min(Comparator.comparingDouble(rt -> rt.geometry(boardSizeFor(rt.station)).centerAbove(0).distanceSquared(player.getLocation())))
+                .filter(rt -> rt.geometry(boardSizeFor(rt.station)).centerAbove(0).distance(player.getLocation()) <= maxDistance)
                 .orElse(null);
     }
 
@@ -1245,7 +1314,7 @@ public final class RouletteManager {
         for (StationRuntime runtime : runtimes.values()) {
             RouletteBoardGeometry g;
             try {
-                g = runtime.geometry(boardSize);
+                g = runtime.geometry(boardSizeFor(runtime.station));
             } catch (IllegalStateException ignored) {
                 continue;
             }
@@ -1261,7 +1330,7 @@ public final class RouletteManager {
         if (player == null) {
             return;
         }
-        Location center = runtime.geometry(boardSize).centerAbove(1.2);
+        Location center = runtime.geometry(boardSizeFor(runtime.station)).centerAbove(1.2);
         for (int i = 0; i < fireworksPerWinner; i++) {
             int delay = i * 6;
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -1441,6 +1510,10 @@ public final class RouletteManager {
 
     private Material selectorBlockFor(RouletteStationData station) {
         return parseMaterial(station.boardSelectorBlock(), selectorBlock);
+    }
+
+    private int boardSizeFor(RouletteStationData station) {
+        return station.boardSize() != null ? station.boardSize() : boardSize;
     }
 
     public String text(String path, String fallback) {
